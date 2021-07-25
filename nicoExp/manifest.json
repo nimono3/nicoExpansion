@@ -1,0 +1,27 @@
+{
+  "manifest_version": 2,
+  "name": "niconico expansion",
+  "version": "1.1.1",
+  "description": "ニコニコに関する機能を追加します",
+  "icons": {
+    "512": "icons/nicoex_512.png",
+    "256": "icons/nicoex_256.png",
+    "128": "icons/nicoex_128.png",
+    "32" : "icons/nicoex_32.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [ "*://www.nicovideo.jp/watch/*" ],
+      "js": [ "script/main.js" ],
+      "run_at": "document_start"
+    }
+  ],
+  "browser_action": {
+    "default_popup": "popup/popup.html"
+  },
+  "permissions": [
+    "*://*.nicovideo.jp/",
+    "storage",
+    "tabs"
+  ]
+}
