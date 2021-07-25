@@ -1,0 +1,107 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            width: 240px;
+            margin: 10px;
+            color: #fafafa;
+            background-color: #252525;
+            border: 5px;
+        }
+
+        h1 {
+            background: #353535;
+            user-select: none;
+        }
+
+        h2 {
+            line-height: 2px;
+        }
+
+        h4 {
+            line-height: 1px;
+            font-weight: lighter;
+            color: #dadada;
+        }
+
+        #view-version {
+            line-height: 1px;
+            font-weight: lighter;
+            color: #dadada;
+        }
+
+        select, a, .taglinks {
+            transition-duration: 0.1s;
+            padding: 6px;
+            border: 2px solid;
+            border-radius: 4px;
+            border-color: #fafafa;
+            font-size: 14px;
+            line-height: 38px;
+            font-family: 'Yu Gothic UI';
+            color: #fafafa;
+            background-color: #252525;
+            cursor: pointer;
+        }
+
+            a:hover {
+                transition-duration: 0.3s;
+                color: #fafafa;
+                border-color: #0075ff;
+            }
+
+        #link-div {
+            user-select: none;
+            display: inline;
+        }
+
+        select {
+            padding: 0px;
+            border: 1px solid;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        label {
+            background-color: #353535;
+            font-size: 16px;
+            font-family: 'Yu Gothic UI';
+            user-select: none;
+            cursor: pointer;
+        }
+
+        input[type=checkbox] {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>&nbsp;ニコニコ拡張</h1><!---->
+    <div id="link-div">
+        <h2>&nbsp;ニコニコ検索</h2>
+        <h4>googleなどの検索から引用検索できます</h4>
+        <a id="video-nico"><b>動画検索</b></a>&nbsp;<a id="seiga-nico"><b>静画検索</b></a>&nbsp;<a id="live-nico"><b>生放送検索</b></a><br />
+        <a id="dic-nico"><b>大百科へ</b></a>
+        <i id="at-link"></i>
+        <br />
+    </div>
+    <div>
+        <h2>＜設定＞</h2>
+        <label>
+            ヘッダーをクリックでスクロール<br />
+                           <select id="click-scroll">
+                               <option value="-1" label="スクロール無し"></option>
+                               <option value="0" label="トップ"></option>
+                               <option value="1" label="投稿日時,再生数"></option>
+                               <option value="2" label="動画タグ" selected></option>
+                           </select>まで
+        </label><br /><br />
+        <label style="display: none;"><input type="checkbox" checked="checked" id="sm-link" />タグ内の動画IDをリンクする<br /></label>
+        <label><input type="checkbox" checked="checked" id="draw-link" />検索を表示</label><br />
+        <h2 id="view-version"></h2>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
