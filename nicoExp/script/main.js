@@ -36,4 +36,6 @@ function scroll_p(mode) {
     if (mode >= 0) scrollTo(0, 0);
     if (mode == 1) scrollTo(0, document.getElementsByClassName('VideoDescription')[0].getBoundingClientRect().bottom - 36);
     if (mode == 2) scrollTo(0, document.getElementsByClassName('VideoMetaContainer')[0].getBoundingClientRect().bottom - 36);
+    if (mode == 3) scrollTo(0, document.getElementsByClassName('TagContainer-area')[0].getBoundingClientRect().bottom - 36);
+    if (mode == 4) scrollTo(0, document.getElementsByClassName('MainContainer')[0].getBoundingClientRect().bottom - 36);
 }
