@@ -2,6 +2,11 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <!--
+    追加予定：
+        マイリスト(その他作品)のブックマーク
+        開いてるページの共有用URL生成(nico.ms, 一応youtu.beも)
+    -->
     <style>
         body {
             width: 240px;
@@ -9,52 +14,94 @@
             color: #fafafa;
             background-color: #252525;
             border: 5px;
+            user-select: none;
         }
 
         h1 {
             background: #353535;
-            user-select: none;
+            margin-bottom: 5px;
         }
 
         h2 {
             line-height: 2px;
         }
 
-        h4 {
-            line-height: 1px;
+        i {
+            line-height: 12px;
             font-weight: lighter;
             color: #dadada;
+            vertical-align: top;
         }
 
         #view-version {
+            text-align: right;
             line-height: 1px;
             font-weight: lighter;
             color: #dadada;
         }
 
-        select, a, .taglinks {
+        select, .n-links {
             transition-duration: 0.1s;
             padding: 6px;
-            border: 2px solid;
+            border: 1px solid #7c7c7c;
             border-radius: 4px;
-            border-color: #fafafa;
             font-size: 14px;
             line-height: 38px;
             font-family: 'Yu Gothic UI';
             color: #fafafa;
             background-color: #252525;
+            outline: 0;
             cursor: pointer;
         }
 
-            a:hover {
+            .n-links:hover {
                 transition-duration: 0.3s;
                 color: #fafafa;
                 border-color: #0075ff;
             }
 
-        #link-div {
-            user-select: none;
-            display: inline;
+            select:focus {
+                transition-duration: 0.2s;
+                border-color: #007cff;
+                outline: 0px;
+            }
+
+        #id-jump {
+            height: 20px;
+            border: 1px solid #353535;
+            border-left: 0px;
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
+            font-family: 'Yu Gothic UI';
+            font-size: 14px;
+            line-height: 14px;
+            color: #fafafa;
+            background-color: #353535;
+            font-weight: 900;
+            outline: 1px;
+            cursor: default;
+        }
+
+        #id-in:focus + #id-jump:hover {
+            transition-duration: 0.3s;
+            color: #fafafa;
+            background-color: #007cff;
+        }
+
+        #jid-div {
+            line-height: 30px;
+        }
+
+        summary {
+            display: block;
+            color: #fafafa;
+            font-size: large;
+            font-weight: bold;
+        }
+
+        #config-sum {
+            display: inline-block;
+            width: 22px;
         }
 
         select {
@@ -68,42 +115,72 @@
             background-color: #353535;
             font-size: 16px;
             font-family: 'Yu Gothic UI';
-            user-select: none;
             cursor: pointer;
         }
 
         input[type=checkbox] {
             cursor: pointer;
         }
+
+        #id-in {
+            width: 120px;
+            height: 18px;
+            padding: 0px;
+            font-size: 14px;
+            font-family: 'Yu Gothic UI';
+            color: #fafafa;
+            background-color: #252525;
+            border: 1px solid #353535;
+            border-right: 0px;
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+        }
+        #id-in:focus {
+            transition-duration: 0.2s;
+            border-color: #007cff;
+            outline: 0px;
+        }
+
+        #id-in:focus + #id-jump {
+            transition-duration: 0.2s;
+            border-color: #007cff;
+            color: #252525;
+            background-color: #fafafa;
+            outline: 0px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <h1>&nbsp;ニコニコ拡張</h1><!---->
+    <div id="jid-div">
+        <input type="text" id="id-in" /><button id="id-jump">>></button><br />
+    </div>
     <div id="link-div">
-        <h2>&nbsp;ニコニコ検索</h2>
-        <h4>googleなどの検索から引用検索できます</h4>
-        <a id="video-nico"><b>動画検索</b></a>&nbsp;<a id="seiga-nico"><b>静画検索</b></a>&nbsp;<a id="live-nico"><b>生放送検索</b></a><br />
-        <a id="dic-nico"><b>大百科へ</b></a>
-        <i id="at-link"></i>
+        <a id="keyword-nico" class="n-links"><b>ワード検索</b></a>&nbsp;<a id="tag-nico" class="n-links"><b>タグ検索</b></a>&nbsp;<a id="dic-nico" class="n-links"><b>大百科へ</b></a>
         <br />
     </div>
-    <div>
-        <h2>＜設定＞</h2>
-        <label>
-            ヘッダーをクリックでスクロール<br />
-                           <select id="click-scroll">
-                               <option value="-1" label="スクロール無し"></option>
-                               <option value="0" label="トップ"></option>
-                               <option value="1" label="投稿日時,再生数"></option>
-                               <option value="2" label="動画タグ" selected></option>
-                               <option value="3" label="動画プレイヤー" selected></option>
-                               <option value="4" label="プレイヤー下" selected></option>
-                           </select>まで
-        </label><br /><br />
-        <label style="display: none;"><input type="checkbox" checked="checked" id="sm-link" />タグ内の動画IDをリンクする<br /></label>
-        <label><input type="checkbox" checked="checked" id="draw-link" />検索を表示</label><br />
-        <h2 id="view-version"></h2>
-    </div>
-    <script src="popup.js"></script>
+    <details id="config-det">
+        <summary><span id="config-sum">▶</span>&nbsp;設定&nbsp;―――――――――</summary>
+        <label style="background-color: #252525;">
+            ヘッダーをクリックで<br />
+            <select id="click-scroll">
+                <option value="-1" label="スクロール無し"></option>
+                <option value="0" label="トップ"></option>
+                <option value="1" label="投稿日時,再生数"></option>
+                <option value="2" label="動画タグ" selected></option>
+                <option value="3" label="動画プレイヤー"></option>
+                <option value="4" label="プレイヤー下"></option>
+            </select>まで
+        </label><br />
+        <label><input type="checkbox" checked="checked" id="draw-jid" />IDジャンプ</label><br />
+        <i>&nbsp;ー入力されたIDの作品を開きます</i><br/>
+        <label><input type="checkbox" checked="checked" id="draw-link" />ニコニコ検索</label><br />
+        <i>&nbsp;ーgoogleなどの検索から引用検索できます</i><br/>
+        <!-- label><input type="checkbox" checked="checked" id="draw-link" />ニコニコ共有</label><br />
+        <i>&nbsp;ーページのURLをnico.ms等で短縮します</i><br/-->
+    </details>
+    <h2 id="view-version">script error</h2>
+    <script src="popup.js" charset="utf-8"></script>
 </body>
 </html>
