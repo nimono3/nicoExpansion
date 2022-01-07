@@ -1,4 +1,5 @@
 let scroll_mode = 2;
+let range_func = (...arg) => [...Array(arg[arg.length - 1]).keys()].slice(!!(arg.length - 1) * arg[0]);
 
 chrome.storage.sync.get({
     s_mode: 2,
@@ -9,7 +10,7 @@ chrome.storage.sync.get({
 chrome.runtime.onMessage.addListener(m => {
     if (m.type == 'cs') {
         scroll_mode = m.cs_value;
-        chrome.storage.sync.set({ s_mode: m.cs_value },()=>{});
+        chrome.storage.sync.set({ s_mode: m.cs_value }, () => { });
     }
 });
 
@@ -34,8 +35,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function scroll_p(mode) {
     if (mode >= 0) scrollTo(0, 0);
-    if (mode == 1) scrollTo(0, document.getElementsByClassName('VideoDescription')[0].getBoundingClientRect().bottom - 36);
-    if (mode == 2) scrollTo(0, document.getElementsByClassName('VideoMetaContainer')[0].getBoundingClientRect().bottom - 36);
-    if (mode == 3) scrollTo(0, document.getElementsByClassName('TagContainer-area')[0].getBoundingClientRect().bottom - 36);
-    if (mode == 4) scrollTo(0, document.getElementsByClassName('MainContainer')[0].getBoundingClientRect().bottom - 36);
+    //if (!(range_func(1, 1 + 4).includes(mode))) return;
+    if (mode <= 0) return;//POWER_PLAY
+    if (mode >= 5) return;//--
+    scrollTo(0, document.getElementsByClassName(([
+        'HeaderContainer-row',
+        'TagContainer',
+        'MainContainer',
+        'BottomContainer'
+    ])[mode - 1])[0].previousElementSibling.getBoundingClientRect().bottom - 36);
+    return;
 }
