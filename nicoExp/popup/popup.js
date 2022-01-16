@@ -41,8 +41,8 @@ const ncids = [/*対応作品オブジェクトリスト{reg: id一致, url: [id
     { reg: /(nc)\d+/g, url: ["https://commons.nicovideo.jp/material/", "?transit_from=nicoEx"], name: "commons", color: "#B091C5", text: "コモンズ" },
     { reg: /(nw)\d+/g, url: ["https://news.nicovideo.jp/watch/", "?news_ref=nicoEx"], name: "news", color: "#ff8000", text: "ニュース" },
     { reg: /(?<=dic\/)\d+/g, url: ["https://dic.nicovideo.jp/id/", ""], name: "dic", color: "#d00", text: "百科" },/*大百科メモ:単語[a],動画[v],生放送[l],コミュニティ[c],ユーザー[u](t/はスマホ記事)*/
-    { reg: /user\/\d+/g, url: ["https://www.nicovideo.jp/", ""], name: "user", color: "#00f", text: "ユーザー" },
     { reg: /mylist\/\d+/g, url: ["https://www.nicovideo.jp/", ""], name: "mylist", color: "#d0f", text: "マイリス" },
+    { reg: /user\/\d+/g, url: ["https://www.nicovideo.jp/", ""], name: "user", color: "#00f", text: "ユーザー" },
     { reg: /(gm)\d+/g, url: ["https://game.nicovideo.jp/atsumaru/games/", "?link_in=nicoEx"], name: "game", color: "#0a0", text: "ゲーム" },
     { reg: /(td)\d+/g, url: ["https://3d.nicovideo.jp/works/", ""], name: "thrdim", color: "#EC3272", text: "立体" },
     { reg: /(nq)\d+/g, url: ["https://q.nicovideo.jp/watch/", ""], name: "quiz", color: "#da0", text: "クイズ" },
