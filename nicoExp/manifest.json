@@ -1,13 +1,13 @@
 {
   "manifest_version": 2,
   "name": "nicoExpansion",
-  "version": "2.6.0",
+  "version": "3.0.2",
   "description": "ニコニコに関する機能を追加します",
   "icons": {
-    "512": "icons/nicoex_512.png",
-    "256": "icons/nicoex_256.png",
-    "128": "icons/nicoex_128.png",
-    "32" : "icons/nicoex_32.png"
+    "512": "icons/nicoEx512.png",
+    "256": "icons/nicoEx256.png",
+    "128": "icons/nicoEx128.png",
+    "32" : "icons/nicoEx32.png"
   },
   "content_scripts": [
     {

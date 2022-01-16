@@ -1,7 +1,7 @@
 let scroll_mode = 2;
 let range_func = (...arg) => [...Array(arg[arg.length - 1]).keys()].slice(!!(arg.length - 1) * arg[0]);
 
-chrome.storage.sync.get({
+chrome.storage.local.get({
     s_mode: 2,
 }, items => {
     scroll_mode = items.s_mode;
@@ -10,7 +10,7 @@ chrome.storage.sync.get({
 chrome.runtime.onMessage.addListener(m => {
     if (m.type == 'cs') {
         scroll_mode = m.cs_value;
-        chrome.storage.sync.set({ s_mode: m.cs_value }, () => { });
+        chrome.storage.local.set({ s_mode: m.cs_value }, () => { });
     }
 });
 

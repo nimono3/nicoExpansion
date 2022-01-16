@@ -1,0 +1,235 @@
+html {
+    /*/filter: invert(1) hue-rotate(180deg);/**/
+}
+
+body {
+    width: 240px;
+    margin: 10px;
+    color: #fafafa;
+    background-color: #252525;
+    border: 5px;
+    user-select: none;
+}
+
+h1 {
+    background: #353535;
+    margin-bottom: 5px;
+    font-size: x-large;
+}
+
+h2 {
+    line-height: 2px;
+    font-size: large;
+}
+
+i {
+    font-size: 12px;
+    font-weight: lighter;
+    line-height: 12px;
+    color: #dadada;
+    vertical-align: top;
+}
+
+a {
+    color: #007cff;
+    font-size: 16px;
+    font-family: 'Yu Gothic UI';
+}
+
+#view-version {
+    text-align: right;
+    line-height: 1px;
+    font-weight: lighter;
+    color: #dadada;
+}
+
+select, .n-links {
+    transition-duration: 0.1s;
+    padding: 6px;
+    border: 1px solid #7c7c7c;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 38px;
+    font-family: 'Yu Gothic UI';
+    color: #fafafa;
+    background-color: #252525;
+    outline: 0;
+    cursor: pointer;
+}
+
+    .n-links:hover {
+        transition-duration: 0.3s;
+        color: #fafafa;
+        border-color: #0075ff;
+    }
+
+    select:focus {
+        transition-duration: 0.2s;
+        border-color: #007cff;
+        outline: 0px;
+    }
+
+input[type=checkbox] {
+    cursor: pointer;
+}
+
+input[type=text] {
+    transition-duration: 0.2s;
+    width: 110px;
+    height: 18px;
+    padding: 0px;
+    font-size: 14px;
+    font-family: 'Yu Gothic UI';
+    color: #fafafa;
+    background-color: #252525;
+    border: 1px solid #353535;
+    border-right: 0px;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+    outline: 0px;
+}
+
+input[type=text]:not(:placeholder-shown) ~ button:hover {
+    color: #252525;
+    background-color: #fafafa;
+}
+
+.id-in:focus {
+    transition-duration: 0.2s;
+    border-color: #007cff;
+}
+
+#url-cp {
+    width: calc(100% - 21px);
+}
+
+    #url-cp:hover {
+        cursor: default;
+    }
+
+    #url-cp:focus {
+        transition-duration: 0.2s;
+        border-color: #fafafa;
+    }
+
+button {
+    transition-duration: 0.2s;
+    height: 20px;
+    border: 1px solid #353535;
+    border-radius: 4px;
+    font-family: 'Yu Gothic UI';
+    font-size: 14px;
+    line-height: 14px;
+    color: #fafafa;
+    background-color: #353535;
+    font-weight: 900;
+    outline: 1px;
+    cursor: default;
+}
+
+.ctrl-btn:hover {
+    transition-duration: 0.2s;
+    background-color: #fafafa;
+    color: #252525;
+    border-color: #252525;
+}
+
+.input-button {
+    border-left: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.id-in:focus + .input-button {
+    transition-duration: 0.2s;
+    border-color: #007cff;
+    color: #252525;
+    background-color: #fafafa;
+    outline: 0px;
+    cursor: pointer;
+}
+
+    .id-in:focus + .input-button:hover {
+        transition-duration: 0.2s;
+        color: #fafafa;
+        background-color: #007cff;
+    }
+
+#url-cp:focus + #url-cp-btn {
+    transition-duration: 0.2s;
+    border-color: #fafafa;
+    outline: 0px;
+    cursor: pointer;
+}
+
+#jpid-div {
+    line-height: 30px;
+}
+
+#curl-div {
+    line-height: 30px;
+}
+
+summary {
+    display: block;
+    color: #fafafa;
+    font-size: large;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: nowrap;
+}
+
+.sum-arw {
+    display: inline-block;
+    width: 18px;
+    text-align: center;
+}
+
+#exls-sel {
+    flex: 1;
+    height: 20px;
+    border-color: #353535;
+    margin: 0 auto;
+}
+
+select {
+    padding: 0px;
+    border: 1px solid;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+label {
+    background-color: #353535;
+    font-size: 16px;
+    font-family: 'Yu Gothic UI';
+    cursor: pointer;
+}
+
+ul {
+    padding: 0;
+    padding-right: 5px;
+    list-style-type: none;
+    max-height: 160px;
+    margin-top: 5px;
+    overflow: hidden auto;
+}
+
+li {
+    height: 24px;
+    font-size: medium;
+    border-radius: 2.5px;
+    padding-left: 20px;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+    li::before {
+        content: "";
+        position: relative;
+        left: -18px;
+    }

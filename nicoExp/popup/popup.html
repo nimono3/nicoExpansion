@@ -4,203 +4,41 @@
     <meta charset="utf-8">
     <!--
     追加予定：
-        マイリスト(その他作品)のブックマーク
+        作品タグのidにジャンプできるようにする「タグジャンプ」
+            ...大百科に飛ぶボタンの横に設置予定
+        拡張マイリスト：
+            リストの並び替え,
+            ラベル名変更,
+            リスト名変更
     -->
-    <style>
-        html {
-            /*filter: invert(1) hue-rotate(180deg);*/
-        }
-        body {
-            width: 240px;
-            margin: 10px;
-            color: #fafafa;
-            background-color: #252525;
-            border: 5px;
-            user-select: none;
-        }
-        h1 {
-            background: #353535;
-            margin-bottom: 5px;
-            font-size: x-large;
-        }
-        h2 {
-            line-height: 2px;
-            font-size: large;
-        }
-        i {
-            font-size: 12px;
-            font-weight: lighter;
-            line-height: 12px;
-            color: #dadada;
-            vertical-align: top;
-        }
-        a {
-            color: #007cff;
-            font-size: 16px;
-            font-family: 'Yu Gothic UI';
-        }
-        #view-version {
-            text-align: right;
-            line-height: 1px;
-            font-weight: lighter;
-            color: #dadada;
-        }
-        select, .n-links {
-            transition-duration: 0.1s;
-            padding: 6px;
-            border: 1px solid #7c7c7c;
-            border-radius: 4px;
-            font-size: 14px;
-            line-height: 38px;
-            font-family: 'Yu Gothic UI';
-            color: #fafafa;
-            background-color: #252525;
-            outline: 0;
-            cursor: pointer;
-        }
-            .n-links:hover {
-                transition-duration: 0.3s;
-                color: #fafafa;
-                border-color: #0075ff;
-            }
-            select:focus {
-                transition-duration: 0.2s;
-                border-color: #007cff;
-                outline: 0px;
-            }
-        input[type=checkbox] {
-            cursor: pointer;
-        }
-
-        input[type=text] {
-            transition-duration: 0.2s;
-            width: 120px;
-            height: 18px;
-            padding: 0px;
-            font-size: 14px;
-            font-family: 'Yu Gothic UI';
-            color: #fafafa;
-            background-color: #252525;
-            border: 1px solid #353535;
-            border-right: 0px;
-            border-top-left-radius: 4px;
-            border-bottom-left-radius: 4px;
-            outline: 0px;
-        }
-
-            #id-in:focus {
-                transition-duration: 0.2s;
-                border-color: #007cff;
-            }
-
-        #url-cp {
-            width: 200px;
-        }
-
-            #url-cp:hover {
-                cursor: default;
-            }
-
-            #url-cp:focus {
-                transition-duration: 0.2s;
-                border-color: #fafafa;
-            }
-
-        .input-button {
-            transition-duration: 0.2s;
-            height: 20px;
-            border: 1px solid #353535;
-            border-left: 0px;
-            border-top-right-radius: 4px;
-            border-bottom-right-radius: 4px;
-            font-family: 'Yu Gothic UI';
-            font-size: 14px;
-            line-height: 14px;
-            color: #fafafa;
-            background-color: #353535;
-            font-weight: 900;
-            outline: 1px;
-            cursor: default;
-        }
-
-        #id-in:focus + #id-jmp-btn {
-            transition-duration: 0.2s;
-            border-color: #007cff;
-            color: #252525;
-            background-color: #fafafa;
-            outline: 0px;
-            cursor: pointer;
-        }
-
-        #url-cp:focus + #url-cp-btn {
-            transition-duration: 0.2s;
-            border-color: #fafafa;
-            outline: 0px;
-            cursor: pointer;
-        }
-
-        #id-in:focus + #id-jmp-btn:hover {
-            transition-duration: 0.2s;
-            color: #fafafa;
-            background-color: #007cff;
-        }
-
-        #url-cp-btn:hover {
-            transition-duration: 0.2s;
-            border-color: #fafafa;
-            color: #252525;
-            background-color: #fafafa;
-        }
-
-        #jid-div {
-            line-height: 30px;
-        }
-
-        #curl-div {
-            line-height: 30px;
-        }
-
-        summary {
-            display: block;
-            color: #fafafa;
-            font-size: large;
-            font-weight: bold;
-        }
-
-        #config-sum {
-            display: inline-block;
-            width: 22px;
-        }
-
-        select {
-            padding: 0px;
-            border: 1px solid;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        label {
-            background-color: #353535;
-            font-size: 16px;
-            font-family: 'Yu Gothic UI';
-            cursor: pointer;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="./popup.css"/>
 </head>
 <body>
-    <h1>&nbsp;ニコニコ拡張</h1><!---->
-    <div id="jid-div">
-        <input type="text" id="id-in" /><button class="input-button" id="id-jmp-btn">>></button><br />
+    <h1>&nbsp;ニコニコ拡張</h1>
+    <div id="jpid-div">
+        <input type="text" class="id-in" id="id-jmp-ipt" placeholder=" " /><button class="input-button" id="id-jmp-btn">>></button><br />
     </div>
     <div id="link-div">
         <a id="keyword-nico" class="n-links"><b>ワード検索</b></a>&nbsp;<a id="tag-nico" class="n-links"><b>タグ検索</b></a>&nbsp;<a id="dic-nico" class="n-links"><b>大百科へ</b></a>
         <br />
     </div>
     <div id="curl-div">
-        <input type="text" id="url-cp" readonly/><button class="input-button" id="url-cp-btn">#</button><br />
+        <input type="text" id="url-cp" placeholder="-url-" readonly /><button class="input-button" id="url-cp-btn" style="width: 20px;">#</button><br />
+    </div>
+    <div id="exls-div">
+        <details id="exls-det">
+            <summary style="display: flex; line-height: 20px;">
+                <span class="sum-arw" id="exls-sum">▶</span><select id="exls-sel">
+                </select><!-- span style="font-size: 15px; width: 25px; text-align: center;">3/5</span-->
+            </summary>
+            <span id="listnumber"></span>
+            <div style="margin-top: 5px; line-height: 30px; display: flex"><input type="text" class="id-in" id="myls-apnd-ipt" placeholder=" " /><button class="input-button" id="myls-apnd-btn">+</button><button class="ctrl-btn" id="exls-qt-btn">Quote</button><button class="ctrl-btn" id="exls-edt-btn">Delete</button></div>
+            <ul id="exls-ul">
+            </ul>
+        </details>
     </div>
     <details id="config-det">
-        <summary><span id="config-sum">▶</span>&nbsp;設定&nbsp;―――――――――</summary>
+        <summary><span class="sum-arw" id="config-sum">▶</span>&nbsp;設定&nbsp;―――――――――――</summary>
         <label style="background-color: #252525;">
             ヘッダーをクリックで<br />
             <select id="click-scroll">
@@ -212,12 +50,14 @@
                 <option value="4" label="プレイヤー下"></option>
             </select>まで
         </label><br />
-        <label><input type="checkbox" checked="checked" id="draw-jid" />IDジャンプ</label><br />
+        <label><input type="checkbox" checked="checked" id="draw-jpid" />IDジャンプ</label><br />
         <i>&nbsp;ー入力されたIDの作品を開きます</i><br />
         <label><input type="checkbox" checked="checked" id="draw-link" />ニコニコ検索</label><br />
         <i>&nbsp;ーgoogleなどの検索から引用検索できます</i><br />
         <label><input type="checkbox" checked="checked" id="draw-curl" />ニコニコ共有</label><br />
         <i>&nbsp;ーページのURLをコピーできます</i><br />
+        <label><input type="checkbox" checked="checked" id="draw-exls" />拡張マイリスト</label><br />
+        <i>&nbsp;ー放送やコモンズも入るマイリストです</i><br />
         <a href="https://forms.gle/6EqDTdddMcrjRXQ88" title="報告, 改善案, 要望, 質問を受付" target="_blank" rel="noopener noreferrer"><b>フィードバック</b></a><br />
     </details>
     <h2 id="view-version">script error</h2>
