@@ -78,6 +78,19 @@ const exls_dis_reset = () => {
     exls_stat.sel = exls_sel.value - 0;
     for (const el of exls_stat.lists[exls_stat.sel].list) exls_ul.appendChild(exlsLi(el.id, el.label, exls_ul.childElementCount));
 };
+const add_exls = (id, label) => {
+    const apnd_obj = { id, label };
+    if (exls_stat.lists[exls_stat.sel].list.length <= 100) {
+        exls_ul.appendChild(exlsLi(apnd_obj.id, apnd_obj.label, exls_ul.childElementCount));
+        exls_stat.lists[exls_stat.sel].list.push({ ...apnd_obj });
+        chrome.storage.local.set({ exlists: exls_stat.lists });
+    }
+};
+const del_exls = num => {
+    exls_stat.lists[exls_stat.sel].list.splice(num, 1);
+    chrome.storage.local.set({ exlists: exls_stat.lists });
+    exls_dis_reset()
+}
 //style
 ncids.map(cate => (sheet => {
     sheet.insertRule(`.exls-${cate.name}{background:linear-gradient(to right,${cate.color},#353535 20%,#353535);}`, sheet.cssRules.length);
@@ -118,22 +131,18 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             for (const el of exls_stat.lists[exls_stat.sel].list) exls_ul.appendChild(exlsLi(el.id, el.label, exls_ul.childElementCount));
             cs.value = items.click_scroll;
-            chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'cs', cs_value: cs.value }));
             tag_link.checked = items.tag_link;
-            chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'tl', tl_value: tag_link.checked }));
+            chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'tag_link', tag_link: tag_link.checked }));
         }
     );
-    exls_sel.addEventListener('change', () => {
-        exls_dis_reset()
-    });
+    exls_sel.addEventListener('change', () => exls_dis_reset());
     cs.addEventListener('change', () => {
         chrome.storage.local.set({ click_scroll: cs.value });
-        chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'cs', cs_value: cs.value }));
         return false;
     });
     tag_link.addEventListener('change', () => {
         chrome.storage.local.set({ tag_link: tag_link.checked });
-        chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'tl', tl_value: tag_link.checked }));
+        chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'tag_link', tag_link: tag_link.checked }));
         return false;
     });
     chrome.tabs.query({ active: true, currentWindow: true }, e => {
@@ -242,16 +251,3 @@ document.getElementById("exls-qt-btn").addEventListener("click", e => {/*popupã
         , []
     ).map(qts => console.log(qts.id, qts.label));*/
 });
-const add_exls = (id, label) => {
-    const apnd_obj = { id, label };
-    if (exls_stat.lists[exls_stat.sel].list.length <= 100) {
-        exls_ul.appendChild(exlsLi(apnd_obj.id, apnd_obj.label, exls_ul.childElementCount));
-        exls_stat.lists[exls_stat.sel].list.push({ ...apnd_obj });
-        chrome.storage.local.set({ exlists: exls_stat.lists });
-    }
-};
-const del_exls = num => {
-    exls_stat.lists[exls_stat.sel].list.splice(num, 1);
-    chrome.storage.local.set({ exlists: exls_stat.lists });
-    exls_dis_reset()
-}
