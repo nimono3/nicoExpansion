@@ -1,13 +1,13 @@
 {
   "manifest_version": 2,
   "name": "nicoExpansion",
-  "version": "3.1.1",
+  "version": "3.1.4",
   "description": "ニコニコに関する機能を追加します",
   "icons": {
-    "512": "icons/nicoEx512.png",
-    "256": "icons/nicoEx256.png",
-    "128": "icons/nicoEx128.png",
-    "32" : "icons/nicoEx32.png"
+    "512": "icons/nicoExp512.png",
+    "256": "icons/nicoExp256.png",
+    "128": "icons/nicoExp128.png",
+    "32" : "icons/nicoExp32.png"
   },
   "content_scripts": [
     {
@@ -20,8 +20,6 @@
     "default_popup": "popup/popup.html"
   },
   "permissions": [
-    "*://*.nicovideo.jp/",
-    "activeTab",
     "storage",
     "tabs"
   ]

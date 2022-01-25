@@ -1,5 +1,6 @@
 let scroll_mode = 2;
 let tag_link = true;
+let tag_border = "1px solid #e5e8ea";
 
 const range_func = (...arg) => [...Array(arg[arg.length - 1]).keys()].slice(!!(arg.length - 1) * arg[0]);
 
@@ -29,7 +30,7 @@ const gen_tag_link = () => {
         let t_link = document.createElement("a");
         t_link.style.width = t_link.style.height = "16px";
         t_link.style.backgroundColor = "#b2bac2";
-        t_link.setAttribute("class", "TagItem-nicoDicLink TagItem-nicoExLink");
+        t_link.setAttribute("class", "TagItem-nicoDicLink TagItem-nicoExpLink");
         t_link.setAttribute("target", "_blank");
         t_link.setAttribute("rel", "noopener");
         t_link.style.textDecoration = "none";
@@ -46,18 +47,12 @@ const gen_tag_link = () => {
     [...document.getElementsByClassName("is-locked")].map(il => { il.style.border = "1px solid #d9a300"; });
 }
 const ext_tag_link = () => {
-    [...document.getElementsByClassName("TagItem-nicoExLink")].map(tinel => {
+    [...document.getElementsByClassName("TagItem-nicoExpLink")].map(tinel => {
         tinel.parentNode.style.paddingRight = "28px";
         tinel.remove();
     });
-    [...document.getElementsByClassName("is-locked")].map(il => { il.style.border = "1px solid #e5e8ea"; });
+    [...document.getElementsByClassName("TagItem")].map(il => { il.style.border = tag_border; });
 }
-
-chrome.storage.local.get({
-    tag_link: true
-}, items => {
-    tag_link = items.tag_link;
-});
 
 chrome.runtime.onMessage.addListener(m => {
     if (m.type == 'tag_link') {
@@ -68,11 +63,22 @@ chrome.runtime.onMessage.addListener(m => {
 });
 
 document.addEventListener('DOMContentLoaded', function () {
+     const tag_observer = new MutationObserver(() => {
+        ext_tag_link();
+        if (tag_link) gen_tag_link();
+    });
+    tag_observer.observe(document.getElementsByClassName("TagList")[0], { childList: true });
+    tag_border = document.getElementsByClassName("TagItem")[0].style.border;
     document.getElementsByClassName('CommonHeader')[0].addEventListener('click', () => {
         chrome.storage.local.get({ click_scroll: 2 }, items => {
             scroll_mode = items.click_scroll;
             scroll_p(scroll_mode);
         });
+    });
+    chrome.storage.local.get({
+        tag_link: true
+    }, items => {
+        tag_link = items.tag_link;
     });
     ext_tag_link();
     if (tag_link) gen_tag_link();

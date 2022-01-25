@@ -27,24 +27,24 @@ const exls_stat = {
     ]
 };
 const ncids = [/*対応作品オブジェクトリスト{reg: id一致, url: [id埋め込み], name: class名などをこれで付ける, color: exls表示時に使用, text: サービス名2~4字 exls用}*/
-    { reg: /(sm|nm|so)\d+/g, url: ["https://www.nicovideo.jp/watch/", "?ref=nicoEx"], name: "douga", color: "#8D8D8D", text: "動画" },
-    { reg: /(im)\d+/g, url: ["https://seiga.nicovideo.jp/seiga/", "?track=nicoEx&ref=nicoEx"], name: "seiga", color: "#E3AA3F", text: "静画" },
-    { reg: /(mg)\d+/g, url: ["https://seiga.nicovideo.jp/watch/", "?ref=nicoEx"], name: "manga", color: "#88C148", text: "漫画" },
-    { reg: /(sg|bk)\d+/g, url: ["https://seiga.nicovideo.jp/watch/", "?ref=nicoEx"], name: "other", color: "#000", text: "その他" },//お題|書籍
-    { reg: /(lv)\d+/g, url: ["https://live.nicovideo.jp/watch/", "?ref=nicoEx"], name: "live", color: "#0af", text: "生放送" },
+    { reg: /(sm|nm|so)\d+/g, url: ["https://www.nicovideo.jp/watch/", "?ref=nicoExp"], name: "douga", color: "#8D8D8D", text: "動画" },
+    { reg: /(im)\d+/g, url: ["https://seiga.nicovideo.jp/seiga/", "?track=nicoExp&ref=nicoExp"], name: "seiga", color: "#E3AA3F", text: "静画" },
+    { reg: /(mg)\d+/g, url: ["https://seiga.nicovideo.jp/watch/", "?ref=nicoExp"], name: "manga", color: "#88C148", text: "漫画" },
+    { reg: /(sg|bk)\d+/g, url: ["https://seiga.nicovideo.jp/watch/", "?ref=nicoExp"], name: "other", color: "#000", text: "その他" },//お題|書籍
+    { reg: /(lv)\d+/g, url: ["https://live.nicovideo.jp/watch/", "?ref=nicoExp"], name: "live", color: "#0af", text: "生放送" },
     { reg: /(co)\d+/g, url: ["https://com.nicovideo.jp/community/", ""], name: "community", color: "#258D8D", text: "コミュ" },
     { reg: /(ch)\d+/g, url: ["https://ch.nicovideo.jp/channel/", ""], name: "channel", color: "#0af", text: "チャン" },
     { reg: /(ar)\d+/g, url: ["https://ch.nicovideo.jp/article/", ""], name: "channel", color: "#0af", text: "チャン" },
     { reg: /(nd)\d+/g, url: ["https://chokuhan.nicovideo.jp/products/detail/", ""], name: "other", color: "#000", text: "その他" },//直販
     { reg: /((az([0-9]|[A-Z])+)|((ys|ggbo).+)|((dw|it)\d+))/g, url: ["https://ichiba.nicovideo.jp/item/", ""], name: "ichiba", color: "#FF9900", text: "市場" },
-    { reg: /(ap)\d+/g, url: ["https://app.nicovideo.jp/app/", "?track=nicoEx"], name: "app", color: "#0a0", text: "アプリ" },
+    { reg: /(ap)\d+/g, url: ["https://app.nicovideo.jp/app/", "?track=nicoExp"], name: "app", color: "#0a0", text: "アプリ" },
     { reg: /(jk)\d+/g, url: ["https://jk.nicovideo.jp/watch/", ""], name: "jikkyou", color: "#d00", text: "実況" },
-    { reg: /(nc)\d+/g, url: ["https://commons.nicovideo.jp/material/", "?transit_from=nicoEx"], name: "commons", color: "#B091C5", text: "コモンズ" },
-    { reg: /(nw)\d+/g, url: ["https://news.nicovideo.jp/watch/", "?news_ref=nicoEx"], name: "news", color: "#ff8000", text: "ニュース" },
+    { reg: /(nc)\d+/g, url: ["https://commons.nicovideo.jp/material/", "?transit_from=nicoExp"], name: "commons", color: "#B091C5", text: "コモンズ" },
+    { reg: /(nw)\d+/g, url: ["https://news.nicovideo.jp/watch/", "?news_ref=nicoExp"], name: "news", color: "#ff8000", text: "ニュース" },
     { reg: /(?<=dic\/)\d+/g, url: ["https://dic.nicovideo.jp/id/", ""], name: "dic", color: "#d00", text: "百科" },/*大百科メモ:単語[a],動画[v],生放送[l],コミュニティ[c],ユーザー[u](t/はスマホ記事)*/
     { reg: /mylist\/\d+/g, url: ["https://www.nicovideo.jp/", ""], name: "mylist", color: "#d0f", text: "マイリス" },
     { reg: /user\/\d+/g, url: ["https://www.nicovideo.jp/", ""], name: "user", color: "#00f", text: "ユーザー" },
-    { reg: /(gm)\d+/g, url: ["https://game.nicovideo.jp/atsumaru/games/", "?link_in=nicoEx"], name: "game", color: "#0a0", text: "ゲーム" },
+    { reg: /(gm)\d+/g, url: ["https://game.nicovideo.jp/atsumaru/games/", "?link_in=nicoExp"], name: "game", color: "#0a0", text: "ゲーム" },
     { reg: /(td)\d+/g, url: ["https://3d.nicovideo.jp/works/", ""], name: "thrdim", color: "#EC3272", text: "立体" },
     { reg: /(nq)\d+/g, url: ["https://q.nicovideo.jp/watch/", ""], name: "quiz", color: "#da0", text: "クイズ" },
     { reg: /^.+$/g, url: ["https://dic.nicovideo.jp/a/", ""], name: "dic-a", color: "#d00", text: "百科" }
