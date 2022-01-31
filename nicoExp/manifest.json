@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "nicoExpansion",
-  "version": "3.2.3",
-  "description": "ニコニコに関する機能を追加します",
+  "version": "3.2.4",
+  "description": "ニコニコに関する機能",
   "icons": {
     "512": "icons/nicoExp512.png",
     "256": "icons/nicoExp256.png",
@@ -14,7 +14,10 @@
       "matches": [
         "*://www.nicovideo.jp/watch/*",
         "*://www.nicovideo.jp/my/*",
-        "*://www.nicovideo.jp/user/*"
+        "*://www.nicovideo.jp/user/*",
+        "*://seiga.nicovideo.jp/seiga/*",
+        "*://seiga.nicovideo.jp/my/*",
+        "*://seiga.nicovideo.jp/clip/*"
       ],
       "js": [ "script/main.js" ],
       "run_at": "document_start"

@@ -1,4 +1,3 @@
-let scroll_mode = 2;
 let tag_link = true;
 let tag_border = "1px solid #e5e8ea";
 
@@ -6,15 +5,13 @@ const range_func = (...arg) => [...Array(arg[arg.length - 1]).keys()].slice(!!(a
 
 const scroll_p = mode => {
     if (mode >= 0) scrollTo(0, 0);
-    //if (!(range_func(1, 1 + 4).includes(mode))) return;
-    if (mode <= 0) return;//POWER_PLAY
-    if (mode >= 5) return;//--
-    scrollTo(0, document.getElementsByClassName(([
-        'HeaderContainer-row',
-        'TagContainer',
-        'MainContainer',
-        'BottomContainer'
-    ])[mode - 1])[0].previousElementSibling.getBoundingClientRect().bottom - 36);
+    if (range_func(1, 1 + 4).includes(mode))
+        scrollTo(0, document.getElementsByClassName(([
+            'HeaderContainer-row',
+            'TagContainer',
+            'MainContainer',
+            'BottomContainer'
+        ])[mode - 1])[0].previousElementSibling.getBoundingClientRect().bottom - 36);
     return;
 }
 const gen_tag_link = () => {
@@ -71,10 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
         tag_observer.observe(document.getElementsByClassName("TagList")[0], { childList: true });
         tag_border = document.getElementsByClassName("TagItem")[0].style.border;
         document.getElementsByClassName('CommonHeader')[0].addEventListener('click', () => {
-            chrome.storage.local.get({ click_scroll: 2 }, items => {
-                scroll_mode = items.click_scroll;
-                scroll_p(scroll_mode);
-            });
+            chrome.storage.local.get({ header_scroll: 2 }, item => scroll_p(parseInt(item.header_scroll)));
         });
         chrome.storage.local.get({
             tag_link: true
@@ -86,33 +80,38 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 window.onload = () => {
-    if (document.getElementsByClassName("UserPage").length) {
-        const myid = (img => img ? img.pop().src.split("/").pop().split(".jpg")[0] : "")([...document.getElementsByClassName("CommonHeader")[0].getElementsByTagName("img")]);
-        if (myid) chrome.storage.local.set({ myid: myid });
-        if (document.getElementsByClassName("MylistPage").length) {
-            if (document.getElementsByClassName("ErrorState-title").length) {
-                if (document.getElementsByClassName("ErrorState-title")[0].innerText.match(/非公開/) && document.getElementsByClassName("UserDetailsHeader-accountID")[0].innerText.match(/\d+/g)[0] === myid) {
-                    const list_link = document.createElement("a");
-                    list_link.href = "https://www.nicovideo.jp/my/mylist/" + document.getElementsByClassName("CommonHeader")[0].getAttribute("data-common-header").match(/(?<=mylist\\\/)\d+/g)[0];
-                    document.getElementsByClassName("ErrorState-title")[0].parentNode.parentNode.appendChild(list_link);
-                    list_link.appendChild(document.getElementsByClassName("ErrorState-title")[0].parentNode);
-                    document.getElementsByClassName("ErrorState-title")[0].parentNode.style.backgroundColor = "#fff";
-                    document.getElementsByClassName("ErrorState-title")[0].parentNode.style.border = "5px solid #d3d3d3";
-                }
-            } else {
-                chrome.storage.local.set({
-                    qtlist: {
-                        name: (el => el ? el.innerText : "")(document.getElementsByClassName("MylistHeader-name")[0]),
-                        list: [...document.getElementsByClassName('NC-MediaObject-contents')].map(l => l.href.split("/").pop()).reduce((acc, val, idx) =>
-                            [...acc, { id: val, label: [...document.getElementsByClassName('NC-MediaObjectTitle')].map(l => l.innerHTML)[idx] }]
-                            , []
-                        )
-                    }
-                });
+    const myid = (img => img ? (i => i.tagName == "IMG"?i.src.split("/").pop().split(".jpg")[0]:"")(img.pop()) : "")([...document.getElementById("CommonHeader").getElementsByTagName("img")]);
+    if (myid) chrome.storage.local.set({ myid: myid });
+    if (document.getElementsByClassName("MylistPage").length) {
+        if (document.getElementsByClassName("ErrorState-title").length) {
+            if (document.getElementsByClassName("ErrorState-title")[0].innerText.match(/非公開/) && document.getElementsByClassName("UserDetailsHeader-accountID")[0].innerText.match(/\d+/g)[0] === myid) {
+                const list_link = document.createElement("a");
+                list_link.href = "https://www.nicovideo.jp/my/mylist/" + document.getElementsByClassName("CommonHeader")[0].getAttribute("data-common-header").match(/(?<=mylist\\\/)\d+/g)[0];
+                document.getElementsByClassName("ErrorState-title")[0].parentNode.parentNode.appendChild(list_link);
+                list_link.appendChild(document.getElementsByClassName("ErrorState-title")[0].parentNode);
+                document.getElementsByClassName("ErrorState-title")[0].parentNode.style.backgroundColor = "#fff";
+                document.getElementsByClassName("ErrorState-title")[0].parentNode.style.border = "5px solid #d3d3d3";
             }
+        } else {
+            chrome.storage.local.set({
+                qtlist: {
+                    name: (el => el ? el.innerText : "")(document.getElementsByClassName("MylistHeader-name")[0]),
+                    list: [...document.getElementsByClassName('NC-MediaObject-contents')].map(l => l.href.split("/").pop()).reduce((acc, val, idx) =>
+                        [...acc, { id: val, label: [...document.getElementsByClassName('NC-MediaObjectTitle')].map(l => l.innerHTML)[idx] }]
+                        , []
+                    )
+                }
+            });
         }
-    }/* else if (document.getElementsByClassName("my_clip").length) {
-        const myid = document.getElementsByClassName("my_menu_profile_image")[0].firstElementChild.src.split("/").pop().split(".jpg")[0];
-        chrome.storage.local.set({ myid: myid });
-    }*/
+    } else if (document.getElementById("my_clip") || document.getElementsByClassName("clip_block_outer").length) {
+        chrome.storage.local.set({
+            qtlist: {
+                name: (el => el[0] ? el[0].firstElementChild.innerText : el[1] ? el[1].firstElementChild.innerText : "")([document.getElementsByClassName("title_text")[0], document.getElementsByClassName("ttl_text")[0]]),
+                list: [...document.getElementsByClassName('text_ttl')].reduce((acc, val) =>
+                    [...acc, { id: val.firstElementChild.href.split("/").pop(), label: val.firstElementChild.innerText }]
+                    , []
+                )
+            }
+        });
+    }
 }
