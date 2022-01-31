@@ -1,6 +1,7 @@
 const cs = document.getElementById('click-scroll');
 const tag_link = document.getElementById('tag-link');
 const exls_sel = document.getElementById("exls-sel");
+const split_chars = ["e01a", "e01b", "e020"].map(c => String.fromCharCode(parseInt(c, 16)));
 exls_sel.value = 0;
 const ex_funcs = ["jpid", "link", "curl", "exls"].reduce((acc, ex_fn_id) => {/*機能の一覧( 描画設定のチェックボックスと機能の要素のelementを管理する )*/
     return {
@@ -15,7 +16,13 @@ const config_sum = document.getElementById("config-sum");/*さんかく*/
 const exls_sum = document.getElementById("exls-sum");/*さんかく*/
 const exls_ul = document.getElementById("exls-ul");/*拡張マイリス用*/
 const apnd_ipt = document.getElementById("myls-apnd-ipt");
+const lname_ipt = document.getElementById("myls-lname-ipt");
+const exls_canvas = document.getElementById("exls-canvas");
+const exls_ctx = exls_canvas.getContext("2d");
+const exls_svimg = document.getElementById("exls-save-img");
 let is_exls_editing = 0;
+let is_exls_optopen = 0;
+let is_exls_imgload = 0;
 const exls_stat = {
     sel: exls_sel.value - 0,
     lists: [
@@ -73,9 +80,18 @@ const exlsOpt = (val, lab) => {
     opt_el.label = lab;
     return opt_el;
 };
+const change_lname = val => {
+    if (val && split_chars.filter(f => ~val.indexOf(f)).length === 0) {
+        lname_ipt.value = val;
+        exls_sel.options[exls_sel.value - 0].label = val;
+        exls_stat.lists[exls_stat.sel].name = val;
+        chrome.storage.local.set({ exlists: exls_stat.lists });
+    }
+};
 const exls_dis_reset = () => {
     [...exls_ul.children].map(e => e.remove());
     exls_stat.sel = exls_sel.value - 0;
+    lname_ipt.value = exls_stat.lists[exls_stat.sel].name;
     for (const el of exls_stat.lists[exls_stat.sel].list) exls_ul.appendChild(exlsLi(el.id, el.label, exls_ul.childElementCount));
 };
 const add_exls = (id, label) => {
@@ -90,6 +106,88 @@ const del_exls = num => {
     exls_stat.lists[exls_stat.sel].list.splice(num, 1);
     chrome.storage.local.set({ exlists: exls_stat.lists });
     exls_dis_reset()
+}
+//canvas
+const str_to_code = str => (str.split('').map(s => ("0000" + s.charCodeAt().toString(16)).slice(-4)).join(''));
+const code_to_image = code => (s => {
+    let arr = [];
+    for (let i = 0; i < s.length; i += 6) {
+        arr.push((s.substr(i, 6) + "00000").substr(0, 6));
+    }
+    return arr;
+})(code.split('').reduce((acc, v) =>
+    [...acc, ...[Math.floor(parseInt(v, 16) / 4), parseInt(v, 16) % 4].map(i => ("0" + (i * 85).toString(16)).slice(-2))], []).join('')
+);
+const image_to_code = img => {
+    let arr = img;
+    let str = "";
+    for (let i = 0; i < arr.length; i += 1) {
+        str += ("0" + Math.floor(arr[i] / 64).toString(2)).slice(-2);
+    }
+    let nstr = "";
+    for (let i = 0; i < str.length; i += 4) {
+        nstr += parseInt((str + "0000").substr(i, 4), 2).toString(16);
+    }
+    return nstr;
+};
+const code_to_str = code => {
+    str = "";
+    for (let i = 0; i < code.length; i += 4) {
+        str += String.fromCharCode(parseInt((code + "00000").substr(i, 4), 16));
+    }
+    return str;
+};
+const reload_canvas = () => {
+    let img = code_to_image(str_to_code(
+        exls_stat.lists[exls_stat.sel].name
+        + split_chars[0]
+        + exls_stat.lists[exls_stat.sel].list.map(l => l.id + split_chars[2] + l.label).join(split_chars[1])
+        + split_chars[0]
+        + "El000*"
+    )).join('');
+    exls_canvas.width = 200;
+    exls_canvas.height = Math.max(Math.ceil(img.length / 6 / exls_canvas.width), 4);
+
+    let imgd = exls_ctx.getImageData(0, 0, exls_canvas.width, exls_canvas.height);
+    let pix = imgd.data;
+
+    [...pix].map((_, i) => pix[i] = (i % 4 != 3 ? parseInt("00" + img.substr((i - Math.floor(i / 4)) * 2, 2), 16) + 0 : 255));
+    [...pix].map((_, i) => i % 4 != 3 ? parseInt("00" + img.substr((i - Math.floor(i / 4)) * 2, 2), 16) + 0 : 255)
+    exls_ctx.putImageData(imgd, 0, 0);
+
+    exls_svimg.src = exls_canvas.toDataURL();
+};
+const load_exls = url => {
+    exls_svimg.src = url;
+    is_exls_imgload = 1;
+    exls_svimg.onload = () => {
+        if (is_exls_imgload) {
+            exls_canvas.height = Math.round(exls_svimg.naturalHeight * 200 / exls_svimg.naturalWidth);
+            exls_ctx.drawImage(exls_svimg, 0, 0, 200, Math.round(exls_svimg.naturalHeight * 200 / exls_svimg.naturalWidth));
+
+            let imgd = exls_ctx.getImageData(0, 0, exls_canvas.width, exls_canvas.height);
+            let pix = imgd.data;
+            let img = [...pix].map((c, i) => i % 4 != 3 ? c : "x").filter(v => v != "x");
+            let str = code_to_str(image_to_code(img));
+            let [meta, stat] = (splited => { return [splited.slice(-1)[0], { name: splited[0], list: splited.slice(1, -1).join(split_chars[0]).split(split_chars[1]) }]; })(str.split(split_chars[0]));
+            console.log("original: ", str, "meta: ", meta, "stat: ", stat);
+
+            if (meta.match(/^El\d+\*.*/)) {
+                change_lname(stat.name);
+                exls_stat.lists[exls_stat.sel].list = [];
+                for (let i = 0; i < exls_ul.children.length; i++) del_exls(0);
+                stat.list.map(l => {
+                    add_exls(...l.split(split_chars[2]));
+                });
+            } else {
+                console.log("規格外の画像が読み込まれました");
+            }
+            is_exls_imgload = 0;
+        }
+    };
+};
+exls_svimg.ondragover = document.getElementById("exls-ld-ipt").onmouseleave = document.getElementById("exls-ld-ipt").ondragleave = e => {
+    document.getElementById("exls-ld-ipt").style.display = e.type == "dragover" ? "block" : "none";
 }
 //style
 ncids.map(cate => (sheet => {
@@ -112,6 +210,8 @@ document.addEventListener('DOMContentLoaded', function () {
             { name: "list3", list: [] },
             { name: "list4", list: [] }
         ],
+        myid: "",
+        qtlist: { name: "", list: [] },
         click_scroll: 2,
         tag_link: true
     },
@@ -129,13 +229,32 @@ document.addEventListener('DOMContentLoaded', function () {
                 exls_stat.lists[key] = items.exlists[key];
                 document.getElementById("exls-sel").appendChild(exlsOpt(key, exls_stat.lists[key].name))
             }
+            lname_ipt.value = exls_stat.lists[exls_stat.sel].name;
+            document.getElementById("exls-opt").style.display = "none";
             for (const el of exls_stat.lists[exls_stat.sel].list) exls_ul.appendChild(exlsLi(el.id, el.label, exls_ul.childElementCount));
             cs.value = items.click_scroll;
             tag_link.checked = items.tag_link;
             chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'tag_link', tag_link: tag_link.checked }));
+            chrome.tabs.query({ active: true, currentWindow: true }, e => {
+                const which = url_to_id_sv(e[0].url);
+                let myid = items.myid;
+                apnd_ipt.value = e[0].url.match(/^https{0,1}:\/\/.+\.nicovideo\.jp/) && which.sv !== "another" ? which.id[0] + "~" + e[0].title.split(" - ").slice(0, -1).join(" - ") : "";
+                document.getElementById("exls-qt-btn").style.display = which.sv === "mylist" ? "inline-block" : "none";
+                document.getElementById("url-cp").value = (url =>
+                    url.match(/^https{0,1}:\/\/[^q]+\.nicovideo\.jp/) && which.sv !== "another" ? "https://nico.ms/" + which.id[0] :
+                        [
+                            ...[
+                                { reg: /(?<=^https{0,1}:\/\/www\.amazon\.(co\.jp|com)\/dp\/)([A-Z]|\d)+(?=.*$)/g, url: ["https://nico.ms/az", ""] },
+                                { reg: /(?<=^https{0,1}:\/\/www\.youtube\.com\/watch\?.*v\=)([a-zA-Z]|-|_|\d)+(?=.*$)/g, url: ["https://youtu.be/", ""] },
+                                { reg: /(?<=^https{0,1}:\/\/www\.nicovideo\.jp\/my.*)/g, url: [myid ? "https://nico.ms/user/" : "https://www.nicovideo.jp/my/", myid] }
+                            ].map(l => url.match(l.reg) ? l.url.join(url.match(l.reg)[0]) : 0),
+                            url
+                        ].filter(_ => _)[0]
+                )(e[0].url);
+            });
         }
     );
-    exls_sel.addEventListener('change', () => exls_dis_reset());
+    exls_sel.addEventListener('change', () => { exls_dis_reset(); reload_canvas(); });
     cs.addEventListener('change', () => {
         chrome.storage.local.set({ click_scroll: cs.value });
         return false;
@@ -145,18 +264,6 @@ document.addEventListener('DOMContentLoaded', function () {
         chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'tag_link', tag_link: tag_link.checked }));
         return false;
     });
-    chrome.tabs.query({ active: true, currentWindow: true }, e => {
-        const which = url_to_id_sv(e[0].url);
-        document.getElementById("myls-apnd-ipt").value = which.sv != "another" ? which.id[0] : "";
-        document.getElementById("exls-qt-btn").style.display = which.sv === "mylist" ? "none" : "none";
-        document.getElementById("url-cp").value = e[0].url
-            .replace(/^(http|https):\/\/www.nicovideo.jp\/$/, "https://nico.ms/")
-            .replace(/^(http|https):\/\/[^q]+\.nicovideo\.jp\/.+\/([a-z]{2}\d+).*$/, "https://nico.ms/$2")
-            .replace(/^(http|https):\/\/www\.nicovideo\.jp\/(user\/\d+)(?!\/mylist).*$/, "https://nico.ms/$2")
-            .replace(/^(http|https):\/\/www\.nicovideo\.jp\/(user\/\d+|my)\/(mylist\/\d+).*$/, "https://nico.ms/$3")
-            .replace(/^(http|https):\/\/www\.amazon\.(co\.jp|com)\/dp\/(([A-Z]|\d)+).*$/, "https://nico.ms/az$3")
-            .replace(/^https{0,1}:\/\/www\.youtube\.com\/watch\?.*v\=(([a-zA-Z]|-|_|\d)+).*$/, "https://youtu.be/$1");
-    });
 });
 //==========================================================================
 document.getElementById('url-cp-btn').onclick = () => {
@@ -165,7 +272,7 @@ document.getElementById('url-cp-btn').onclick = () => {
 }
 document.getElementById('id-jmp-btn').onclick = () => id_jump(document.getElementById('id-jmp-ipt').value);
 document.getElementById('id-jmp-ipt').addEventListener('keydown', e => {
-    if (e.keyCode == 13) id_jump(document.getElementById('id-jmp-ipt').value);
+    if (e.keyCode == 13) document.getElementById('id-jmp-btn').click();
 });
 document.getElementById("jpid-div").title = `対応ページ->
     ニコニコ動画{sm,nm,so}
@@ -191,18 +298,16 @@ document.getElementById("link-div").title = `Google,YouTubeの検索から引用
 document.getElementById("curl-div").title = `ニコニコ動画,静画,生放送など=>nico.msで短縮
 ニコニコQ=>短縮不可
 Amazon=>nico.msで短縮(ニコニコ市場URL)
-YouTube=>youtu.beで短縮`;/*
-document.getElementById("exls-div").title = `マイリストのような機能
-動画の他、静画,生放送,コモンズ等に対応`;*/
+YouTube=>youtu.beで短縮`;
 
 document.getElementById('keyword-nico').onclick = () => searcher_nico("https://nicovideo.jp/search/", "v-key");
 document.getElementById('tag-nico').onclick = () => searcher_nico("https://nicovideo.jp/tag/", "v-tag");
 document.getElementById('dic-nico').onclick = () => searcher_nico("https://dic.nicovideo.jp/", "dic");
 function searcher_nico(link_parts, mode) {
     chrome.tabs.query({ active: true, currentWindow: true }, e => {
-        var act_url = e[0].url;
-        var act_host = act_url.split('/')[2];
-        var search_word = "";
+        const act_url = e[0].url;
+        const act_host = act_url.split('/')[2];
+        let search_word = "";
         if (act_host == "www.google.com" | act_host == "www.google.co.jp") {
             search_word = new URLSearchParams(act_url.slice(act_url.indexOf('?'))).get("q");
         } else if (act_host == "www.youtube.com") {
@@ -211,7 +316,7 @@ function searcher_nico(link_parts, mode) {
             search_word = (new URLSearchParams(act_url.split('/').pop().split('?')[0]) + []).slice(0, -1);
         }
         if (mode == "dic") {
-            if (search_word.slice(0, 2) == "sm" | search_word.slice(0, 2) == "nm") {
+            if (url_to_id_sv(search_word) == "video") {
                 search_word = "v/" + search_word;
             } else {
                 search_word = "a/" + search_word;
@@ -226,28 +331,62 @@ document.getElementById("exls-det").addEventListener("toggle", _ => {
 document.getElementById("config-det").addEventListener("toggle", _ => {
     config_sum.innerText = document.getElementById("config-det").open ? "▼" : "▶";
 }, false);
-document.getElementById("myls-apnd-btn").addEventListener("click", e => {
-    chrome.tabs.query({ active: true, currentWindow: true }, e => {
-        apnd_ipt.value ? add_exls(apnd_ipt.value, (id => id == url_to_id_sv(e[0].url).id[0] ? e[0].title.split(" - ").slice(0, -1).join(" - ") : id)(apnd_ipt.value)) : -1;
+document.getElementById("myls-apnd-btn").addEventListener("click", () => {
+    if (split_chars.filter(f => ~apnd_ipt.value.indexOf(f)).length === 0) {
+        if (apnd_ipt.value) add_exls(...(v => [v[0], v.slice(1).join("~") ? v.slice(1).join("~") : v[0]])(apnd_ipt.value.split("~")));
         apnd_ipt.value = "";
-    });
+        reload_canvas();
+    }
 });
-document.getElementById("myls-apnd-ipt").addEventListener("keydown", e => {
+apnd_ipt.addEventListener("keydown", e => {
     if (e.keyCode == 13) {
-        chrome.tabs.query({ active: true, currentWindow: true }, e => {
-            apnd_ipt.value ? add_exls(apnd_ipt.value, (id => id == url_to_id_sv(e[0].url).id[0] ? e[0].title.split(" - ").slice(0, -1).join(" - ") : id)(apnd_ipt.value)) : -1;
-            apnd_ipt.value = "";
-        });
+        document.getElementById("myls-apnd-btn").click();
+    }
+});
+document.getElementById("myls-lname-btn").addEventListener("click", e => {
+    change_lname(lname_ipt.value);
+    reload_canvas();
+});
+lname_ipt.addEventListener("keydown", e => {
+    if (e.keyCode == 13) {
+        document.getElementById("myls-lname-btn").click();
     }
 });
 document.getElementById("exls-edt-btn").addEventListener("click", e => {
     is_exls_editing ^= 1;
-    document.getElementById("exls-edt-btn").innerText = is_exls_editing ? "Quit" : "Delete";
+    document.getElementById("exls-edt-btn").innerText = is_exls_editing ? "Quit" : "Del";
     exls_ul.style.background = is_exls_editing ? "linear-gradient(to right, #f00, #252525)" : "#252525";
 });
-document.getElementById("exls-qt-btn").addEventListener("click", e => {/*popupから直接ページを読み取ろうとして失敗
-    [...document.getElementsByClassName('NC-MediaObject-contents')].map(l => l.href.split("/").pop()).reduce((acc, val, idx) =>
-        [...acc, { id: val, label: [...document.getElementsByClassName('NC-MediaObjectTitle')].map(l => l.innerHTML)[idx] }]
-        , []
-    ).map(qts => console.log(qts.id, qts.label));*/
+document.getElementById("exls-opt-btn").addEventListener("click", e => {
+    is_exls_optopen ^= 1;
+    document.getElementById("exls-opt-btn").innerText = is_exls_optopen ? "Exit" : "Opt";
+    exls_ul.style.display = is_exls_optopen ? "none" : "";
+    document.getElementById("exls-opt").style.display = is_exls_optopen ? "" : "none";
+    if (is_exls_optopen) reload_canvas();
 });
+document.getElementById("exls-ld-ipt").addEventListener("change", e => {
+    let r = new FileReader();
+    r.readAsDataURL(e.target.files[0]);
+    r.onload = () => {
+        load_exls(r.result);
+    }
+});
+document.getElementById("exls-qt-btn").addEventListener("click", e => {
+    chrome.storage.local.get({ qtlist: { name: "", list: [] } }, item => {
+        if (item.qtlist.name) {
+            exls_stat.lists[exls_stat.sel].list = [...exls_stat.lists[exls_stat.sel].list, ...item.qtlist.list];
+            chrome.storage.local.set({ exlists: exls_stat.lists });
+            exls_dis_reset();
+            reload_canvas();
+            lname_ipt.value = item.qtlist.name;
+        }
+    });
+});
+document.getElementById("exls-cl-btn").addEventListener("click", e => {
+    if (confirm("リスト内容をすべて削除します")) {
+        exls_stat.lists[exls_stat.sel].list = [];
+        chrome.storage.local.set({ exlists: exls_stat.lists });
+        exls_dis_reset();
+        reload_canvas();
+    }
+}, false);

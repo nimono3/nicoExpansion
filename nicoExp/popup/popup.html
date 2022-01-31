@@ -4,14 +4,10 @@
     <meta charset="utf-8">
     <!--
     追加予定：
-        作品タグのidにジャンプできるようにする「タグジャンプ」
-            ...大百科に飛ぶボタンの横に設置予定
         拡張マイリスト：
-            リストの並び替え,
-            ラベル名変更,
-            リスト名変更
+            クリップから引用
     -->
-    <link rel="stylesheet" type="text/css" href="./popup.css"/>
+    <link rel="stylesheet" type="text/css" href="./popup.css" />
 </head>
 <body>
     <h1>&nbsp;ニコニコ拡張</h1>
@@ -31,10 +27,19 @@
                 <span class="sum-arw" id="exls-sum">▶</span><select id="exls-sel">
                 </select><!-- span style="font-size: 15px; width: 25px; text-align: center;">3/5</span-->
             </summary>
-            <span id="listnumber"></span>
-            <div style="margin-top: 5px; line-height: 30px; display: flex"><input type="text" class="id-in" id="myls-apnd-ipt" placeholder=" " /><button class="input-button" id="myls-apnd-btn">+</button><button class="ctrl-btn" id="exls-qt-btn">Quote</button><button class="ctrl-btn" id="exls-edt-btn">Delete</button></div>
-            <ul id="exls-ul">
-            </ul>
+            <div>
+                <div style="margin-top: 5px; line-height: 30px; display: flex"><input type="text" class="id-in" id="myls-apnd-ipt" placeholder=" " /><button class="input-button" id="myls-apnd-btn">+</button><button class="ctrl-btn" id="exls-edt-btn">Del</button><button class="ctrl-btn" id="exls-opt-btn">Opt</button></div>
+                <ul id="exls-ul">
+                </ul>
+            </div>
+            <div id="exls-opt" style="line-height: 30px; display: flex">
+                <input type="text" class="id-in" id="myls-lname-ipt" placeholder="List name" /><button class="input-button" id="myls-lname-btn">%</button><button class="ctrl-btn" id="exls-qt-btn">Quote</button><button class="ctrl-btn" id="exls-cl-btn">Clear</button>
+                <label style="position: relative; display: inline-block; background: none;">
+                    <canvas id="exls-canvas"></canvas>
+                    <img id="exls-save-img" />
+                    <input type="file" id="exls-ld-ipt" title="リストをロード&#13;&#10;画像を保存でセーブ">
+                </label>
+            </div>
         </details>
     </div>
     <details id="config-det">

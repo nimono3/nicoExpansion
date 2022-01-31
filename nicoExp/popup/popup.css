@@ -89,10 +89,10 @@ input[type=text] {
     outline: 0px;
 }
 
-input[type=text]:not(:placeholder-shown) ~ button:hover {
-    color: #252525;
-    background-color: #fafafa;
-}
+    input[type=text]:not(:placeholder-shown) ~ button:hover {
+        color: #252525;
+        background-color: #fafafa;
+    }
 
 .id-in:focus {
     transition-duration: 0.2s;
@@ -233,3 +233,45 @@ li {
         position: relative;
         left: -18px;
     }
+
+#exls-canvas {
+    display: none;
+}
+
+#exls-save-img {
+    display: inline-block;
+    width: 240px;
+    height: 100px;
+}
+
+#exls-ld-ipt {
+    opacity: 0.5;
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0px;
+    height: 0px;
+    padding: 120px;
+    padding-bottom: 0;
+    padding-top: 100px;
+    background-color: #252525;
+    cursor: pointer;
+}
+
+    #exls-ld-ipt::after {
+        content: "リストを読み込む";
+        font-size: 16px;
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: calc(100% - 6px);
+        height: calc(100% - 6px);
+        border: 3px solid #fafafa;
+        border-radius: 10px;
+    }
+
+#exls-cl-btn:hover {
+    color: #ff0000;
+}
