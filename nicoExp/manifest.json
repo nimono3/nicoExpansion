@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "nicoExpansion",
-  "version": "3.2.4",
+  "version": "3.3.0",
   "description": "ニコニコに関する機能",
   "icons": {
     "512": "icons/nicoExp512.png",
@@ -15,6 +15,7 @@
         "*://www.nicovideo.jp/watch/*",
         "*://www.nicovideo.jp/my/*",
         "*://www.nicovideo.jp/user/*",
+        "*://www.nicovideo.jp/series/*",
         "*://seiga.nicovideo.jp/seiga/*",
         "*://seiga.nicovideo.jp/my/*",
         "*://seiga.nicovideo.jp/clip/*"

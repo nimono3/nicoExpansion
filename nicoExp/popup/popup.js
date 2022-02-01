@@ -26,11 +26,13 @@ const ncids = [/*対応作品オブジェクトリスト{reg: id一致, url: [id
     [/(nw)\d+/g, ["https://news.nicovideo.jp/watch/", "?news_ref=nicoExp"], "news", "#ff8000", "ニュース"],
     [/(?<=dic\/)\d+/g, ["https://dic.nicovideo.jp/id/", ""], "dic", "#d00", "百科"],/*大百科メモ:単語[a],動画[v],生放送[l],コミュニティ[c],ユーザー[u](t/はスマホ記事)*/
     [/mylist\/\d+/g, ["https://www.nicovideo.jp/", ""], "mylist", "#d0f", "マイリス"],
+    [/user\/\d+(?=\/video)/g, ["https://www.nicovideo.jp/", ""], "user-v", "#00f", "ユーザー"],
     [/user\/\d+/g, ["https://www.nicovideo.jp/", ""], "user", "#00f", "ユーザー"],
     [/(gm)\d+/g, ["https://game.nicovideo.jp/atsumaru/games/", "?link_in=nicoExp"], "game", "#0a0", "ゲーム"],
     [/(td)\d+/g, ["https://3d.nicovideo.jp/works/", ""], "thrdim", "#EC3272", "立体"],
     [/(nq)\d+/g, ["https://q.nicovideo.jp/watch/", ""], "quiz", "#da0", "クイズ"],
     [/clip\/\d+/g, ["https://seiga.nicovideo.jp/", ""], "clip", "#0df", "クリップ"],
+    [/series\/\d+/g, ["https://www.nicovideo.jp/", ""], "series", "#3fc2b7", "シリーズ"],
     [/^.+$/g, ["https://dic.nicovideo.jp/a/", ""], "dic-a", "#d00", "百科"]
 ].map(arr => { const nc = {};[nc.reg, nc.url, nc.name, nc.color, nc.text] = arr; return nc });
 const id_jump = id => (url => ~url ? window.open(url) : -1)(id_to_url(id));
@@ -81,8 +83,10 @@ addEL(document, 'DOMContentLoaded', _ => {
                 chrome.tabs.sendMessage(e[0].id, { type: 'tag_link', tag_link: tag_link.checked })
                 const which = url_to_id_sv(e[0].url);
                 let myid = items.myid;
-                apnd_ipt.value = e[0].url.match(/^https{0,1}:\/\/.+\.nicovideo\.jp/) && which.sv !== "another" ? which.id[0] + (e[0].title.split(" - ").length>1?"~":"") + e[0].title.split(" - ").slice(0, -1).join(" - ") : "";
-                getEl.id("exls-qt-btn").style.display = which.sv === "mylist" || which.sv === "clip" ? "inline-block" : "none";
+                let cont_title = e[0].title.match(/(クリップしたイラスト)|(さんのシリーズ)/) ? items.qtlist.name : e[0].title.split(" - ").slice(0, -1).join(" - ");
+                apnd_ipt.value = e[0].url.match(/^https{0,1}:\/\/.+\.nicovideo\.jp/) && which.sv !== "another" ? which.id[0] + (e[0].title.split(" - ").length > 1 ? "~" : "") + cont_title : "";
+                getEl.id("exls-qt-btn").style.display =
+                    (which.sv === "mylist" || which.sv === "clip" || which.sv === "series" || which.sv === "user-v") && !e[0].url.match(/garage/) ? "inline-block" : "none";
                 getEl.id("url-cp").value = (url =>
                     url.match(/^https{0,1}:\/\/[^q]+\.nicovideo\.jp/) && which.sv !== "another" && which.sv !== "clip" ? "https://nico.ms/" + which.id[0] :
                         [
@@ -118,6 +122,7 @@ const exls_ctx = exls_canvas.getContext("2d");
 const exls_svimg = getEl.id("exls-save-img");
 let is_exls_editing = 0;
 let is_exls_optopen = 0;
+let is_exls_imgload = 0;
 const exls_sel = getEl.id("exls-sel");
 exls_sel.value = 0;
 const exls_stat = {
@@ -215,7 +220,7 @@ const reload_canvas = () => {
         + split_chars[0]
         + exls_stat.lists[exls_stat.sel].list.map(l => l.id + split_chars[2] + l.label).join(split_chars[1])
         + split_chars[0]
-        + "El000*"
+        + "El001*"
     )).join('');
     exls_canvas.width = 200;
     exls_canvas.height = Math.max(Math.ceil(img.length / 6 / exls_canvas.width), 4);
@@ -231,26 +236,29 @@ const reload_canvas = () => {
 };
 const load_exls = url => {
     exls_svimg.src = url;
-    exls_svimg.onload = () => {
-        exls_canvas.height = Math.round(exls_svimg.naturalHeight * 200 / exls_svimg.naturalWidth);
-        exls_ctx.drawImage(exls_svimg, 0, 0, 200, Math.round(exls_svimg.naturalHeight * 200 / exls_svimg.naturalWidth));
+    exls_svimg.onload = _ => {
+        if (is_exls_imgload) {
+            exls_canvas.height = Math.round(exls_svimg.naturalHeight * 200 / exls_svimg.naturalWidth);
+            exls_ctx.drawImage(exls_svimg, 0, 0, 200, Math.round(exls_svimg.naturalHeight * 200 / exls_svimg.naturalWidth));
 
-        let imgd = exls_ctx.getImageData(0, 0, exls_canvas.width, exls_canvas.height);
-        let pix = imgd.data;
-        let img = [...pix].map((c, i) => i % 4 != 3 ? c : "x").filter(v => v != "x");
-        let str = code_to_str(image_to_code(img));
-        let [meta, stat] = (splited => { return [splited.slice(-1)[0], { name: splited[0], list: splited.slice(1, -1).join(split_chars[0]).split(split_chars[1]) }]; })(str.split(split_chars[0]));
-        console.log("original: ", str, "meta: ", meta, "stat: ", stat);
+            let imgd = exls_ctx.getImageData(0, 0, exls_canvas.width, exls_canvas.height);
+            let pix = imgd.data;
+            let img = [...pix].map((c, i) => i % 4 != 3 ? c : "x").filter(v => v != "x");
+            let str = code_to_str(image_to_code(img));
+            let [meta, stat] = (splited => { return [splited.slice(-1)[0], { name: splited[0], list: splited.slice(1, -1).join(split_chars[0]).split(split_chars[1]) }]; })(str.split(split_chars[0]));
+            console.log("original: ", str, "meta: ", meta, "stat: ", stat);
 
-        if (meta.match(/^El\d+\*.*/)) {
-            change_lname(stat.name);
-            exls_stat.lists[exls_stat.sel].list = [];
-            for (let i = 0; i < exls_ul.children.length; i++) del_exls(0);
-            stat.list.map(l => {
-                add_exls(...l.split(split_chars[2]));
-            });
-        } else {
-            console.log("規格外の画像が読み込まれました");
+            if (meta.match(/^El\d+\*.*/)) {
+                change_lname(stat.name);
+                exls_stat.lists[exls_stat.sel].list = [];
+                for (let i = 0; i < exls_ul.children.length; i++) del_exls(0);
+                if (stat.list.length % 2 - 1) stat.list.map(l => {
+                    add_exls(...l.split(split_chars[2]));
+                });
+            } else {
+                console.log("規格外の画像が読み込まれました");
+            }
+            is_exls_imgload = 0;
         }
     };
 };
@@ -294,9 +302,9 @@ addELs([/*EventListeners*/
     [getEl.id("exls-ld-ipt"), "change", e => {
         let r = new FileReader();
         r.readAsDataURL(e.target.files[0]);
-        r.onload = _ => {
-            load_exls(r.result);
-        }
+        is_exls_imgload = 1
+        r.onload = _ => load_exls(r.result);
+        getEl.id("exls-ld-ipt").value = "";
     }],
     [getEl.id("exls-qt-btn"), "click", _ => {
         chrome.storage.local.get({ qtlist: { name: "", list: [] } }, item => {
