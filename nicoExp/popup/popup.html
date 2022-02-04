@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <!--
-    追加予定：
+    追加予定機能：
+        なし
     -->
     <link rel="stylesheet" type="text/css" href="./popup.css" />
 </head>
@@ -30,7 +31,7 @@
                 <ul id="exls-ul">
                 </ul>
             </div>
-            <div id="exls-opt" style="line-height: 30px; display: flex">
+            <div id="exls-opt" style="line-height: 30px; display: flex;">
                 <input type="text" class="id-in" id="myls-lname-ipt" placeholder="List name" /><button class="input-button" id="myls-lname-btn">%</button><button class="ctrl-btn" id="exls-qt-btn">Quote</button><button class="ctrl-btn" id="exls-cl-btn">Clear</button>
                 <label style="position: relative; display: inline-block; background: none;">
                     <canvas id="exls-canvas"></canvas>
@@ -42,27 +43,25 @@
     </div>
     <details id="config-det">
         <summary><span class="sum-arw" id="config-sum">▶</span>&nbsp;設定&nbsp;―――――――――――</summary>
-        <label style="background-color: #252525;">
-            ヘッダーをクリックで<br />
-            <select id="click-scroll">
-                <option value="-1" label="スクロール無し"></option>
-                <option value="0" label="トップ"></option>
-                <option value="1" label="投稿日時,再生数"></option>
-                <option value="2" label="動画タグ" selected></option>
-                <option value="3" label="動画プレイヤー"></option>
-                <option value="4" label="プレイヤー下"></option>
-            </select>まで
-        </label><br />
-        <label><input type="checkbox" checked="checked" id="tag-link" />拡張タグ</label><br />
-        <i>&nbsp;ー動画タグのIDのジャンプボタンを設置</i><br />
-        <label><input type="checkbox" checked="checked" id="draw-jpid" />IDジャンプ</label><br />
-        <i>&nbsp;ー入力されたIDの作品を開きます</i><br />
-        <label><input type="checkbox" checked="checked" id="draw-link" />ニコニコ検索</label><br />
-        <i>&nbsp;ーgoogleなどの検索から引用検索できます</i><br />
-        <label><input type="checkbox" checked="checked" id="draw-curl" />ニコニコ共有</label><br />
-        <i>&nbsp;ーページのURLをコピーできます</i><br />
-        <label><input type="checkbox" checked="checked" id="draw-exls" />拡張マイリスト</label><br />
-        <i>&nbsp;ー放送やコモンズも入るマイリストです</i><br />
+        <label>
+            <span style="display: flex;" id="scroll-span">
+                スクロール<select id="click-scroll">
+                    <option value="-1" label="スクロール無し"></option>
+                    <option value="0" label="トップ"></option>
+                    <option value="1" label="投稿日時,再生数"></option>
+                    <option value="2" label="動画タグ" selected></option>
+                    <option value="3" label="動画プレイヤー"></option>
+                    <option value="4" label="プレイヤー下"></option>
+                </select>
+            </span>
+        </label>
+        <label><input type="checkbox" checked="checked" id="tag-link"  class="setting-check" /><span>拡張タグ</span></label>
+        <label><input type="checkbox" checked="checked" id="draw-jpid" class="setting-check" /><span>IDジャンプ</span></label>
+        <label><input type="checkbox" checked="checked" id="draw-link" class="setting-check" /><span>ニコニコ検索</span></label>
+        <label><input type="checkbox" checked="checked" id="draw-curl" class="setting-check" /><span>ニコニコ共有</span></label>
+        <label><input type="checkbox" checked="checked" id="draw-exls" class="setting-check" /><span>拡張マイリスト</span></label>
+        <label><input type="checkbox" checked="checked" id="ichiba-tab"class="setting-check" /><span>タブ市場</span></label>
+        <br />
         <a href="https://forms.gle/6EqDTdddMcrjRXQ88" title="報告, 改善案, 要望, 質問を受付" target="_blank" rel="noopener noreferrer"><b>フィードバック</b></a><br />
     </details>
     <h2 id="view-version">script error</h2>

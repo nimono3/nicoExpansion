@@ -41,6 +41,7 @@ const url_to_id_sv = url => ncids.map(i => i.name != "dic-a" ? { id: url.match(i
 
 /*セーブ・ロード*/
 const tag_link = getEl.id('tag-link');
+const ichiba_tab = getEl.id('ichiba-tab');
 getEl.id('view-version').innerText = "version-" + chrome.runtime.getManifest().version;
 addEL(document, 'DOMContentLoaded', _ => {
     chrome.storage.local.get({
@@ -58,7 +59,8 @@ addEL(document, 'DOMContentLoaded', _ => {
         myid: "",
         qtlist: { name: "", list: [] },
         header_scroll: 2,
-        tag_link: true
+        tag_link: true,
+        ichiba_tab: true
     },
         items => {
             for (const key in ex_funcs) {
@@ -79,8 +81,10 @@ addEL(document, 'DOMContentLoaded', _ => {
             for (const el of exls_stat.lists[exls_stat.sel].list) exls_ul.appendChild(exlsLi(el.id, el.label, exls_ul.childElementCount));
             header_scroll.value = items.header_scroll;
             tag_link.checked = items.tag_link;
+            ichiba_tab.checked = items.ichiba_tab;
             chrome.tabs.query({ active: true, currentWindow: true }, e => {
-                chrome.tabs.sendMessage(e[0].id, { type: 'tag_link', tag_link: tag_link.checked })
+                chrome.tabs.sendMessage(e[0].id, { type: 'tag_link', tag_link: tag_link.checked });
+                chrome.tabs.sendMessage(e[0].id, { type: 'ichiba_tab', ichiba_tab: ichiba_tab.checked });
                 const which = url_to_id_sv(e[0].url);
                 let myid = items.myid;
                 let cont_title = e[0].title.match(/(クリップしたイラスト)|(さんのシリーズ)/) ? items.qtlist.name : e[0].title.split(" - ").slice(0, -1).join(" - ");
@@ -110,6 +114,10 @@ addEL(document, 'DOMContentLoaded', _ => {
         [tag_link, _ => {
             chrome.storage.local.set({ tag_link: tag_link.checked });
             chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'tag_link', tag_link: tag_link.checked }));
+        }],
+        [ichiba_tab, _ => {
+            chrome.storage.local.set({ ichiba_tab: ichiba_tab.checked });
+            chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'ichiba_tab', ichiba_tab: ichiba_tab.checked }));
         }]
     ].map(arr => [arr[0], "change", arr[1]]));
 });

@@ -5,10 +5,17 @@ html {
 body {
     width: 240px;
     margin: 10px;
+    margin-right: 0;
+    padding-right: 10px;
     color: #fafafa;
     background-color: #252525;
     border: 5px;
     user-select: none;
+    overflow-y: scroll;
+}
+
+body::-webkit-scrollbar {
+    width: 8px;
 }
 
 h1 {
@@ -48,7 +55,7 @@ select, .n-links {
     padding: 6px;
     border: 1px solid #7c7c7c;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 12px;
     line-height: 38px;
     font-family: 'Yu Gothic UI';
     color: #fafafa;
@@ -65,12 +72,86 @@ select, .n-links {
 
     select:focus {
         transition-duration: 0.2s;
-        border-color: #007cff;
+        background-color: #353535;
         outline: 0px;
     }
 
+#exls-sel {
+    flex: 1;
+    height: 20px;
+    border-color: #353535;
+    margin: 0 auto;
+}
+
+select {
+    padding: 0px;
+    border: 1px solid;
+    font-weight: bold;
+}
+
+#click-scroll {
+    flex: 1;
+    font-size: 14px;
+    border: none;
+}
+
 input[type=checkbox] {
+    display: none;
     cursor: pointer;
+}
+label span {
+    display: block;
+    background-color: #353535;
+    line-height: 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: 'Yu Gothic UI';
+    padding: 1px;
+    border: 2px solid #808080;
+    position: relative;
+}
+label input[type=checkbox]:checked + span {
+    border-color: #007cff;
+}
+label span::after {
+    content: "";
+    opacity: 0;
+    position: absolute;
+    left: 0;
+    bottom: 80%;
+    font-size: 12px;
+    line-height: 20px;
+    border: 1px solid #808080;
+    color: #fafafa;
+    background-color: #252525;
+    pointer-events: none;
+}
+label span:hover::after {
+    transition-duration: 0.3s;
+    opacity: 1;
+    width: auto;
+}
+label #scroll-span:hover::after {
+    content: "ヘッダーをクリックでスクロールします";
+}
+label #tag-link + span:hover::after {
+    content: "動画タグのIDのジャンプボタンを設置";
+}
+label #draw-jpid + span:hover::after {
+    content: "入力されたIDの作品を開きます";
+}
+label #draw-link + span:hover::after {
+    content: "googleなどの検索から引用検索できます";
+}
+label #draw-curl + span:hover::after {
+    content: "ページのURLをコピーできます";
+}
+label #draw-exls + span:hover::after {
+    content: "放送やコモンズも入るマイリストです";
+}
+label #ichiba-tab + span:hover::after {
+    content: "市場の場所を変えます";
 }
 
 input[type=text] {
@@ -127,7 +208,7 @@ button {
     cursor: default;
 }
 
-.ctrl-btn:hover {
+.ctrl-btn:hover, .ctrl-btn:focus {
     transition-duration: 0.2s;
     background-color: #fafafa;
     color: #252525;
@@ -149,7 +230,7 @@ button {
     cursor: pointer;
 }
 
-    .id-in:focus + .input-button:hover {
+    .id-in:focus + .input-button:hover, .input-button:focus {
         transition-duration: 0.2s;
         color: #fafafa;
         background-color: #007cff;
@@ -186,34 +267,13 @@ summary {
     text-align: center;
 }
 
-#exls-sel {
-    flex: 1;
-    height: 20px;
-    border-color: #353535;
-    margin: 0 auto;
-}
-
-select {
-    padding: 0px;
-    border: 1px solid;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-label {
-    background-color: #353535;
-    font-size: 16px;
-    font-family: 'Yu Gothic UI';
-    cursor: pointer;
-}
-
 ul {
     padding: 0;
     padding-right: 5px;
     list-style-type: none;
     max-height: 160px;
     margin-top: 5px;
-    overflow: hidden auto;
+    overflow: hidden scroll;
 }
 
 li {
@@ -274,4 +334,16 @@ li {
 
 #exls-cl-btn:hover {
     color: #ff0000;
+}
+
+ul::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: #808080;
+}
+::-webkit-scrollbar-track {
+    background: #252525;
 }

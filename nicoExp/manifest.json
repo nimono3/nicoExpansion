@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "nicoExpansion",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "ニコニコに関する機能",
   "icons": {
     "512": "icons/nicoExp512.png",

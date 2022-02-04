@@ -74,12 +74,91 @@ const ext_tag_link = () => {
         [...document.getElementsByClassName("TagItem")].map(il => { il.style.border = tag_border; });
     }
 }
+const PPC_tab_observers = [];
+const gen_ichiba_tab = () => {
+    const PPC_tab = document.getElementsByClassName("PlayerPanelContainer-tab")[0];
+    const PPC_content = document.getElementsByClassName("PlayerPanelContainer-content")[0];
+    const newtab = document.createElement("div");
+    newtab.classList.add("PlayerPanelContainer-tabItem");
+    newtab.classList.remove("current");
+    newtab.innerText = "ニコニコ市場";
+    PPC_tab.appendChild(newtab);
+    const newpanel = document.createElement("div");
+    newpanel.classList.add("IchibaPanelContainer");
+    newpanel.style.height = "100%";
+    [...document.getElementsByClassName("PlayerPanelContainer-tabItem")].map((e, i) => {
+        e.style.userSelect = "none";
+        e.addEventListener("click", _ => {
+            if (!e.classList.contains("current")) {
+                [...PPC_tab.getElementsByClassName("current")].map(e => e.classList.remove("current"));
+                e.classList.add("current");
+                if (PPC_content.getElementsByClassName("IchibaPanelContainer").length) {
+                    PPC_content.removeChild(PPC_content.getElementsByClassName("IchibaPanelContainer")[0]);
+                    if (PPC_content.children.length) {
+                        let temp = PPC_content.removeChild(PPC_content.firstElementChild);
+                        temp.style.display = "";
+                        PPC_content.appendChild(temp);
+                    }
+                }
+                if (e === newtab) {
+                    PPC_content.firstElementChild.style.display = "none";
+                    PPC_content.appendChild(newpanel);
+                    if (!newpanel.children.length && document.getElementsByClassName("IchibaContainer").length) {
+                        const ichiba_container = document.getElementsByClassName("IchibaContainer")[0];
+                        newpanel.appendChild(ichiba_container);
+                        newpanel.getElementsByClassName("Card-main")[0].style.paddingRight = "0";
+                        ichiba_container.style.padding = "0";
+                        ichiba_container.classList.add("WatchRecommendation-inner");
+                        ichiba_container.style.overflowY = "scroll";
+                        ichiba_container.style.height = "100%";
+                        ichiba_container.classList.remove("Card");
+                    }
+                }
+            }
+        }, false);
+        PPC_tab_observers.push(new MutationObserver(_ => {
+            if (PPC_tab.getElementsByClassName("current").length !== 1) {
+                if (e.classList.contains("current")) e.classList.remove("current");
+                e.click();
+            }
+        }));
+        PPC_tab_observers[i].observe(e, {
+            attributes: true,
+            attributeFilter: ["class"]
+        });
+    });
+};
 
 chrome.runtime.onMessage.addListener(m => {
     if (m.type == 'tag_link') {
         tag_link = m.tag_link;
         ext_tag_link();
         if (tag_link) gen_tag_link();
+    } else if (m.type == 'ichiba_tab') {
+        chrome.storage.local.get({ ichiba_tab: true }, item => {
+            if (item.ichiba_tab) {
+                if ([...document.getElementsByClassName("PlayerPanelContainer-tabItem")].length === 2) {
+                    gen_ichiba_tab();
+                }
+            } else {
+                if ([...document.getElementsByClassName("PlayerPanelContainer-tabItem")].length !== 2) {
+                    let newtab = [...document.getElementsByClassName("PlayerPanelContainer-tabItem")].pop();
+                    newtab.click();
+                    if (document.getElementsByClassName("PlayerPanelContainer-content")[0].getElementsByClassName("IchibaContainer").length) {
+                        let ichiba_container = document.getElementsByClassName("IchibaContainer")[0];
+                        document.getElementsByClassName("BottomMainContainer")[0].children[0].appendChild(ichiba_container);
+                        ichiba_container.style = "";
+                        ichiba_container.classList.add("Card");
+                        ichiba_container.classList.remove("WatchRecommendation-inner");
+                        ichiba_container.getElementsByClassName("Card-main")[0].style = "";
+                    }
+                    if (document.getElementsByClassName("PlayerPanelContainer-tabItem").length > 2) {
+                        document.getElementsByClassName("PlayerPanelContainer-tab")[0].removeChild(newtab).removeEventListener("click");
+                    }
+                    document.getElementsByClassName("PlayerPanelContainer-content")[0].removeChild(document.getElementsByClassName("IchibaPanelContainer")[0]);
+                }
+            }
+        });
     }
 });
 
@@ -92,7 +171,9 @@ document.addEventListener('DOMContentLoaded', function () {
         tag_observer.observe(document.getElementsByClassName("TagList")[0], { childList: true });
         tag_border = document.getElementsByClassName("TagItem")[0].style.border;
         document.getElementsByClassName('CommonHeader')[0].addEventListener('click', () => {
-            chrome.storage.local.get({ header_scroll: 2 }, item => scroll_p(parseInt(item.header_scroll)));
+            chrome.storage.local.get({ header_scroll: 2 }, item =>
+                scroll_p(parseInt(item.header_scroll))
+            );
         });
         chrome.storage.local.get({
             tag_link: true
@@ -101,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ext_tag_link();
             if (tag_link) gen_tag_link();
         });
-    } else if (document.getElementsByClassName("Series").length){
+    } else if (document.getElementsByClassName("Series").length) {
         chrome.storage.local.set({
             qtlist: {
                 name: document.title.match(/((?<=^「).*(?=（全\d+件）」))/g)[0],
@@ -116,7 +197,13 @@ document.addEventListener('DOMContentLoaded', function () {
 window.onload = () => {
     const myid = (img => img ? (i => i ? i.tagName == "IMG" ? i.src.split("/").pop().split(".jpg")[0] : "" : "")(img.pop()) : "")([...document.getElementById("CommonHeader").getElementsByTagName("img")]);
     if (myid) chrome.storage.local.set({ myid: myid });
-    if (document.getElementsByClassName("MylistPage").length) {
+    if (document.getElementsByClassName("VideoTitle").length) {
+        chrome.storage.local.get({ ichiba_tab: true }, item => {
+            if (item.ichiba_tab) {
+                gen_ichiba_tab();
+            }
+        });
+    } else if (document.getElementsByClassName("MylistPage").length) {
         if (document.getElementsByClassName("ErrorState-title").length) {
             if (document.getElementsByClassName("ErrorState-title")[0].innerText.match(/非公開/) && document.getElementsByClassName("UserDetailsHeader-accountID")[0].innerText.match(/\d+/g)[0] === myid) {
                 const list_link = document.createElement("a");
