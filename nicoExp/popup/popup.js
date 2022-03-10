@@ -260,8 +260,8 @@ const load_exls = url => {
                 change_lname(stat.name);
                 exls_stat.lists[exls_stat.sel].list = [];
                 for (let i = 0; i < exls_ul.children.length; i++) del_exls(0);
-                if (stat.list.length % 2 - 1) stat.list.map(l => {
-                    add_exls(...l.split(split_chars[2]));
+                stat.list.map(l => {
+                    if (l.split(split_chars[2]).length === 2) add_exls(...l.split(split_chars[2]));
                 });
             } else {
                 console.log("規格外の画像が読み込まれました");

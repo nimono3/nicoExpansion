@@ -5,13 +5,16 @@ const range_func = (...arg) => [...Array(arg[arg.length - 1]).keys()].slice(!!(a
 
 const scroll_p = mode => {
     if (mode >= 0) scrollTo(0, 0);
-    if (range_func(1, 1 + 4).includes(mode))
+    if (range_func(1, 1 + 4).includes(mode)) {
+        const common_header = document.getElementById("CommonHeader") || { clientHeight: 36, style: { position: "sticky" } };//取得失敗用
+        const correction = common_header.clientHeight * (common_header.style.position === "sticky");
         scrollTo(0, document.getElementsByClassName(([
             'HeaderContainer-row',
             'TagContainer',
             'MainContainer',
             'BottomContainer'
-        ])[mode - 1])[0].previousElementSibling.getBoundingClientRect().bottom - 36);
+        ])[mode - 1])[0].previousElementSibling.getBoundingClientRect().bottom - correction);
+    }
     return;
 }
 const gen_tag_link = () => {
@@ -83,6 +86,7 @@ const gen_ichiba_tab = () => {
     newtab.classList.remove("current");
     newtab.innerText = "ニコニコ市場";
     PPC_tab.appendChild(newtab);
+    newtab.setAttribute("onclick", "[...document.getElementsByClassName(\"PlayerPanelContainer-tabItem\")].pop().addEventListener(\"click\",_=>ichiba.reloadMain(),false);");
     const newpanel = document.createElement("div");
     newpanel.classList.add("IchibaPanelContainer");
     newpanel.style.height = "100%";
@@ -170,10 +174,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         tag_observer.observe(document.getElementsByClassName("TagList")[0], { childList: true });
         tag_border = document.getElementsByClassName("TagItem")[0].style.border;
-        document.getElementsByClassName('CommonHeader')[0].addEventListener('click', () => {
-            chrome.storage.local.get({ header_scroll: 2 }, item =>
-                scroll_p(parseInt(item.header_scroll))
-            );
+        document.getElementById("CommonHeader").addEventListener('click', e => {
+            if(e.path.length <= 10)
+                chrome.storage.local.get({ header_scroll: 2 }, item =>
+                    scroll_p(parseInt(item.header_scroll))
+                );
         });
         chrome.storage.local.get({
             tag_link: true
