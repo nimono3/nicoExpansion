@@ -27,12 +27,12 @@
                 </select><!-- span style="font-size: 15px; width: 25px; text-align: center;">3/5</span-->
             </summary>
             <div>
-                <div style="margin-top: 5px; line-height: 30px; display: flex"><input type="text" class="id-in" id="myls-apnd-ipt" placeholder=" " /><button class="input-button" id="myls-apnd-btn">+</button><button class="ctrl-btn" id="exls-edt-btn">Del</button><button class="ctrl-btn" id="exls-opt-btn">Opt</button></div>
+                <div style="margin-top: 5px; line-height: 30px; display: flex"><input type="text" class="id-in" id="myls-apnd-ipt" placeholder=" " /><button class="input-button" id="myls-apnd-btn">+</button><button class="ctrl-btn" id="exls-edt-btn">Del</button><button class="ctrl-btn" id="exls-opt-btn">Opt</button><button class="ctrl-btn" id="open-nc-page" title="疑似ニコニコページで編集する">@</button></div>
                 <ul id="exls-ul">
                 </ul>
             </div>
             <div id="exls-opt" style="line-height: 30px; display: flex;">
-                <input type="text" class="id-in" id="myls-lname-ipt" placeholder="List name" /><button class="input-button" id="myls-lname-btn">%</button><button class="ctrl-btn" id="exls-qt-btn">Quote</button><button class="ctrl-btn" id="exls-cl-btn">Clear</button>
+                <input type="text" class="id-in" id="myls-lname-ipt" placeholder="List name" /><button class="input-button" id="myls-lname-btn">%</button><button class="ctrl-btn" id="exls-qt-btn" title="マイリスト/クリップ/シリーズ/投稿動画から引用する">Quote</button><button class="ctrl-btn" id="exls-cl-btn">Clear</button>
                 <label style="position: relative; display: inline-block; background: none;">
                     <canvas id="exls-canvas"></canvas>
                     <img id="exls-save-img" />
@@ -65,6 +65,7 @@
         <a href="https://forms.gle/6EqDTdddMcrjRXQ88" title="報告, 改善案, 要望, 質問を受付" target="_blank" rel="noopener noreferrer"><b>フィードバック</b></a><br />
     </details>
     <h2 id="view-version">script error</h2>
+    <script src="../script/ncid.js" charset="utf-8"></script>
     <script src="popup.js" charset="utf-8"></script>
 </body>
 </html>

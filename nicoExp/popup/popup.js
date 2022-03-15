@@ -9,39 +9,12 @@ const ex_funcs = ["jpid", "link", "curl", "exls"].reduce((acc, ex_fn_id) => ({/*
         div: getEl.id(ex_fn_id + '-div')
     }
 }), {});
-const ncids = [/*対応作品オブジェクトリスト{reg: id一致, url: [id埋め込み], name: class名などをこれで付ける, color: exls表示時に使用, text: サービス名2~4字 exls用}*/
-    [/(sm|nm|so)\d+/g, ["https://www.nicovideo.jp/watch/", "?ref=nicoExp"], "douga", "#8D8D8D", "動画"],
-    [/(im)\d+/g, ["https://seiga.nicovideo.jp/seiga/", "?track=nicoExp&ref=nicoExp"], "seiga", "#E3AA3F", "静画"],
-    [/(mg)\d+/g, ["https://seiga.nicovideo.jp/watch/", "?ref=nicoExp"], "manga", "#88C148", "漫画"],
-    [/(sg|bk)\d+/g, ["https://seiga.nicovideo.jp/watch/", "?ref=nicoExp"], "other", "#000", "その他"],//お題|書籍
-    [/(lv)\d+/g, ["https://live.nicovideo.jp/watch/", "?ref=nicoExp"], "live", "#0af", "生放送"],
-    [/(co)\d+/g, ["https://com.nicovideo.jp/community/", ""], "community", "#258D8D", "コミュ"],
-    [/(ch)\d+/g, ["https://ch.nicovideo.jp/channel/", ""], "channel", "#0af", "チャン"],
-    [/(ar)\d+/g, ["https://ch.nicovideo.jp/article/", ""], "channel", "#0af", "チャン"],
-    [/(nd)\d+/g, ["https://chokuhan.nicovideo.jp/products/detail/", ""], "other", "#000", "その他"],//直販
-    [/((az([0-9]|[A-Z])+)|((ys|ggbo).+)|((dw|it)\d+))/g, ["https://ichiba.nicovideo.jp/item/", ""], "ichiba", "#FF9900", "市場"],
-    [/(ap)\d+/g, ["https://app.nicovideo.jp/app/", "?track=nicoExp"], "app", "#0a0", "アプリ"],
-    [/(jk)\d+/g, ["https://jk.nicovideo.jp/watch/", ""], "jikkyou", "#d00", "実況"],
-    [/(nc)\d+/g, ["https://commons.nicovideo.jp/material/", "?transit_from=nicoExp"], "commons", "#B091C5", "コモンズ"],
-    [/(nw)\d+/g, ["https://news.nicovideo.jp/watch/", "?news_ref=nicoExp"], "news", "#ff8000", "ニュース"],
-    [/(?<=dic\/)\d+/g, ["https://dic.nicovideo.jp/id/", ""], "dic", "#d00", "百科"],/*大百科メモ:単語[a],動画[v],生放送[l],コミュニティ[c],ユーザー[u](t/はスマホ記事)*/
-    [/mylist\/\d+/g, ["https://www.nicovideo.jp/", ""], "mylist", "#d0f", "マイリス"],
-    [/user\/\d+(?=\/video)/g, ["https://www.nicovideo.jp/", ""], "user-v", "#00f", "ユーザー"],
-    [/user\/\d+/g, ["https://www.nicovideo.jp/", ""], "user", "#00f", "ユーザー"],
-    [/(gm)\d+/g, ["https://game.nicovideo.jp/atsumaru/games/", "?link_in=nicoExp"], "game", "#0a0", "ゲーム"],
-    [/(td)\d+/g, ["https://3d.nicovideo.jp/works/", ""], "thrdim", "#EC3272", "立体"],
-    [/(nq)\d+/g, ["https://q.nicovideo.jp/watch/", ""], "quiz", "#da0", "クイズ"],
-    [/clip\/\d+/g, ["https://seiga.nicovideo.jp/", ""], "clip", "#0df", "クリップ"],
-    [/series\/\d+/g, ["https://www.nicovideo.jp/", ""], "series", "#3fc2b7", "シリーズ"],
-    [/^.+$/g, ["https://dic.nicovideo.jp/a/", ""], "dic-a", "#d00", "百科"]
-].map(arr => { const nc = {};[nc.reg, nc.url, nc.name, nc.color, nc.text] = arr; return nc });
-const id_jump = id => (url => ~url ? window.open(url) : -1)(id_to_url(id));
-const id_to_url = id => (ret => !!ret ? ret[1].join(ret[0][0]) : -1)(ncids.map(i => [id.match(i.reg), i.url]).filter(_ => _[0])[0]);
-const url_to_id_sv = url => ncids.map(i => i.name != "dic-a" ? { id: url.match(i.reg), sv: i.name } : { id: [], sv: "another" }).filter(_ => _.id)[0];
 
 /*セーブ・ロード*/
 const tag_link = getEl.id('tag-link');
 const ichiba_tab = getEl.id('ichiba-tab');
+const exls_sel = getEl.id("exls-sel");
+exls_sel.value = 0;
 getEl.id('view-version').innerText = "version-" + chrome.runtime.getManifest().version;
 addEL(document, 'DOMContentLoaded', _ => {
     chrome.storage.local.get({
@@ -49,6 +22,7 @@ addEL(document, 'DOMContentLoaded', _ => {
         link: true,
         curl: true,
         exls: true,
+        exls_sel: 0,
         exlists: [
             { name: "list0", list: [] },
             { name: "list1", list: [] },
@@ -76,6 +50,7 @@ addEL(document, 'DOMContentLoaded', _ => {
                 exls_stat.lists[key] = items.exlists[key];
                 getEl.id("exls-sel").appendChild(exlsOpt(key, exls_stat.lists[key].name))
             }
+            exls_stat.sel = exls_sel.value = items.exls_sel;
             lname_ipt.value = exls_stat.lists[exls_stat.sel].name;
             getEl.id("exls-opt").style.display = "none";
             for (const el of exls_stat.lists[exls_stat.sel].list) exls_ul.appendChild(exlsLi(el.id, el.label, exls_ul.childElementCount));
@@ -88,17 +63,18 @@ addEL(document, 'DOMContentLoaded', _ => {
                 const which = url_to_id_sv(e[0].url);
                 let myid = items.myid;
                 let cont_title = e[0].title.match(/(クリップしたイラスト)|(さんのシリーズ)/) ? items.qtlist.name : e[0].title.split(" - ").slice(0, -1).join(" - ");
-                apnd_ipt.value = e[0].url.match(/^https{0,1}:\/\/.+\.nicovideo\.jp/) && which.sv !== "another" ? which.id[0] + (e[0].title.split(" - ").length > 1 ? "~" : "") + cont_title : "";
+                apnd_ipt.value = e[0].url.match(/^https?:\/\/.+\.nicovideo\.jp/) && which.sv !== "another" ? which.id[0] + (e[0].title.split(" - ").length > 1 ? "~" : "") + cont_title : "";
+                if (!apnd_ipt.value && e[0].url.match(/(?<=^https{0,1}:\/\/www\.amazon\.(co\.jp|com)(\/.*)?\/dp\/)([A-Z]|\d)+(?=.*$)/)) apnd_ipt.value = "az" + e[0].url.match(/(?<=^https?:\/\/www\.amazon\.(co\.jp|com)(\/.*)?\/dp\/)([A-Z]|\d)+(?=.*$)/g) + "~" + e[0].title.split(" | ").slice(0, -4).join(" | ");
                 getEl.id("exls-qt-btn").style.display =
                     (which.sv === "mylist" || which.sv === "clip" || which.sv === "series" || which.sv === "user-v") && !e[0].url.match(/garage/) ? "inline-block" : "none";
                 getEl.id("url-cp").value = (url =>
-                    url.match(/^https{0,1}:\/\/[^q]+\.nicovideo\.jp/) && which.sv !== "another" && which.sv !== "clip" ? "https://nico.ms/" + which.id[0] :
+                    url.match(/^https?:\/\/[^q]+\.nicovideo\.jp/) && which.sv !== "another" && which.sv !== "clip" ? "https://nico.ms/" + which.id[0] :
                         [
                             ...[
-                                { reg: /(?<=^https{0,1}:\/\/www\.amazon\.(co\.jp|com)\/dp\/)([A-Z]|\d)+(?=.*$)/g, url: ["https://nico.ms/az", ""] },
-                                { reg: /(?<=^https{0,1}:\/\/www\.youtube\.com\/watch\?.*v\=)([a-zA-Z]|-|_|\d)+(?=.*$)/g, url: ["https://youtu.be/", ""] },
-                                { reg: /(?<=^https{0,1}:\/\/www\.nicovideo\.jp\/my.*)/g, url: [myid ? "https://nico.ms/user/" : "https://www.nicovideo.jp/my/", myid] },
-                                { reg: /(?<=^https{0,1}:\/\/seiga\.nicovideo\.jp\/my\/)clip\/\d+/g, url: ["https://seiga.nicovideo.jp/", ""] }
+                                { reg: /(?<=^https?:\/\/www\.amazon\.(co\.jp|com)(\/.*)?\/dp\/)([A-Z]|\d)+(?=.*$)/g, url: ["https://nico.ms/az", ""] },
+                                { reg: /(?<=^https?:\/\/www\.youtube\.com\/watch\?.*v\=)([a-zA-Z]|-|_|\d)+(?=.*$)/g, url: ["https://youtu.be/", ""] },
+                                { reg: /(?<=^https?:\/\/www\.nicovideo\.jp\/my.*)/g, url: [myid ? "https://nico.ms/user/" : "https://www.nicovideo.jp/my/", myid] },
+                                { reg: /(?<=^https?:\/\/seiga\.nicovideo\.jp\/my\/)clip\/\d+/g, url: ["https://seiga.nicovideo.jp/", ""] }
                             ].map(l => url.match(l.reg) ? l.url.join(url.match(l.reg)[0]) : 0),
                             url
                         ].filter(_ => _)[0]
@@ -107,10 +83,8 @@ addEL(document, 'DOMContentLoaded', _ => {
         }
     );
     addELs([
-        [exls_sel, _ => { exls_dis_reset(); reload_canvas(); }],
-        [header_scroll, _ => {
-            chrome.storage.local.set({ header_scroll: header_scroll.value });
-        }],
+        [exls_sel, _ => { chrome.storage.local.set({ exls_sel: exls_sel.value }); exls_dis_reset(); reload_canvas(); }],
+        [header_scroll, _ => chrome.storage.local.set({ header_scroll: header_scroll.value })],
         [tag_link, _ => {
             chrome.storage.local.set({ tag_link: tag_link.checked });
             chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'tag_link', tag_link: tag_link.checked }));
@@ -131,10 +105,8 @@ const exls_svimg = getEl.id("exls-save-img");
 let is_exls_editing = 0;
 let is_exls_optopen = 0;
 let is_exls_imgload = 0;
-const exls_sel = getEl.id("exls-sel");
-exls_sel.value = 0;
 const exls_stat = {
-    sel: exls_sel.value - 0,
+    sel: 0,
     lists: [
         { name: "", list: [] },
         { name: "", list: [] },
@@ -143,6 +115,7 @@ const exls_stat = {
         { name: "", list: [] }
     ]
 };
+addEL(getEl.id("open-nc-page"), "click", () => window.open(`https://www.nicovideo.jp/my/mylist/ex${exls_stat.sel}`));
 const exlsLi = (id, text, key) => {
     const li_el = document.createElement("li");
     li_el.className = "exls-" + ncids.filter(ncid => id.match(ncid.reg))[0].name;
@@ -244,6 +217,7 @@ const reload_canvas = () => {
 };
 const load_exls = url => {
     exls_svimg.src = url;
+    exls_svimg.style.height = "";
     exls_svimg.onload = _ => {
         if (is_exls_imgload) {
             exls_canvas.height = Math.round(exls_svimg.naturalHeight * 200 / exls_svimg.naturalWidth);
