@@ -6,31 +6,31 @@ const nc_imgs = {
     other: _ => ""
 };
 const ncids = [/*対応作品オブジェクトリスト{reg: id一致, url: [id埋め込み], name: class名などをこれで付ける, color: exls表示時に使用, text: サービス名2~4字 exls用}*/
-    [/(sm|nm|so)\d+/g, ["https://www.nicovideo.jp/watch/", "?ref=nicoExp"], "douga", "#8D8D8D", "動画"],
-    [/(im)\d+/g, ["https://seiga.nicovideo.jp/seiga/", "?track=nicoExp&ref=nicoExp"], "seiga", "#E3AA3F", "静画"],
-    [/(mg)\d+/g, ["https://seiga.nicovideo.jp/watch/", "?ref=nicoExp"], "manga", "#88C148", "漫画"],
-    [/(sg|bk)\d+/g, ["https://seiga.nicovideo.jp/watch/", "?ref=nicoExp"], "other", "#000", "その他"],//お題|書籍
-    [/(lv)\d+/g, ["https://live.nicovideo.jp/watch/", "?ref=nicoExp"], "live", "#0af", "生放送"],
-    [/(co)\d+/g, ["https://com.nicovideo.jp/community/", ""], "community", "#258D8D", "コミュ"],
-    [/(ch)\d+/g, ["https://ch.nicovideo.jp/channel/", ""], "channel", "#0af", "チャン"],
-    [/(ar)\d+/g, ["https://ch.nicovideo.jp/article/", ""], "channel", "#0af", "チャン"],
-    [/(nd)\d+/g, ["https://chokuhan.nicovideo.jp/products/detail/", ""], "other", "#000", "その他"],//直販
-    [/((az([0-9]|[A-Z])+)|((ys|ggbo).+)|((dw|it)\d+))/g, ["https://ichiba.nicovideo.jp/item/", ""], "ichiba", "#FF9900", "市場"],
-    [/(ap)\d+/g, ["https://app.nicovideo.jp/app/", "?track=nicoExp"], "app", "#0a0", "アプリ"],
-    [/(jk)\d+/g, ["https://jk.nicovideo.jp/watch/", ""], "jikkyou", "#d00", "実況"],
-    [/(nc)\d+/g, ["https://commons.nicovideo.jp/material/", "?transit_from=nicoExp"], "commons", "#B091C5", "コモンズ"],
-    [/(nw)\d+/g, ["https://news.nicovideo.jp/watch/", "?news_ref=nicoExp"], "news", "#ff8000", "ニュース"],
-    [/(?<=dic\/)\d+/g, ["https://dic.nicovideo.jp/id/", ""], "dic", "#d00", "百科"],/*大百科メモ:単語[a],動画[v],生放送[l],コミュニティ[c],ユーザー[u](t/はスマホ記事)*/
-    [/mylist\/\d+/g, ["https://www.nicovideo.jp/", ""], "mylist", "#d0f", "マイリス"],
-    [/user\/\d+(?=\/video)/g, ["https://www.nicovideo.jp/", ""], "user-v", "#00f", "ユーザー"],
-    [/user\/\d+/g, ["https://www.nicovideo.jp/", ""], "user", "#00f", "ユーザー"],
-    [/(gm)\d+/g, ["https://game.nicovideo.jp/atsumaru/games/", "?link_in=nicoExp"], "game", "#0a0", "ゲーム"],
-    [/(td)\d+/g, ["https://3d.nicovideo.jp/works/", ""], "thrdim", "#EC3272", "立体"],
-    [/(nq)\d+/g, ["https://q.nicovideo.jp/watch/", ""], "quiz", "#da0", "クイズ"],
-    [/clip\/\d+/g, ["https://seiga.nicovideo.jp/", ""], "clip", "#0df", "クリップ"],
-    [/series\/\d+/g, ["https://www.nicovideo.jp/", ""], "series", "#3fc2b7", "シリーズ"],
-    [/^.+$/g, ["https://dic.nicovideo.jp/a/", ""], "dic-a", "#d00", "百科"]
-].map(arr => { const nc = {};[nc.reg, nc.url, nc.name, nc.color, nc.text] = arr; return nc });
+    [/(sm|nm|so)\d+/g, ["https://www.nicovideo.jp/watch/", "?ref=nicoExp"], "douga", "#8D8D8D", "動画", "video"],
+    [/(im)\d+/g, ["https://seiga.nicovideo.jp/seiga/", "?track=nicoExp&ref=nicoExp"], "seiga", "#E3AA3F", "静画", "seiga"],
+    [/(mg)\d+/g, ["https://seiga.nicovideo.jp/watch/", "?ref=nicoExp"], "manga", "#88C148", "漫画", null],
+    [/(sg|bk)\d+/g, ["https://seiga.nicovideo.jp/watch/", "?ref=nicoExp"], "other", "#000", "その他", null],//お題|書籍
+    [/(lv)\d+/g, ["https://live.nicovideo.jp/watch/", "?ref=nicoExp"], "live", "#0af", "生放送", "live"],
+    [/(co)\d+/g, ["https://com.nicovideo.jp/community/", ""], "community", "#258D8D", "コミュ", null],
+    [/(ch)\d+/g, ["https://ch.nicovideo.jp/channel/", ""], "channel", "#0af", "チャン", null],
+    [/(ar)\d+/g, ["https://ch.nicovideo.jp/article/", ""], "channel", "#0af", "チャン", null],
+    [/(nd)\d+/g, ["https://chokuhan.nicovideo.jp/products/detail/", ""], "other", "#000", "その他", null],//直販
+    [/((az([0-9]|[A-Z])+)|((ys|ggbo).+)|((dw|it)\d+))/g, ["https://ichiba.nicovideo.jp/item/", ""], "ichiba", "#FF9900", "市場", null],
+    [/(ap)\d+/g, ["https://app.nicovideo.jp/app/", "?track=nicoExp"], "app", "#0a0", "アプリ", null],
+    [/(jk)\d+/g, ["https://jk.nicovideo.jp/watch/", ""], "jikkyou", "#d00", "実況", null],
+    [/(nc)\d+/g, ["https://commons.nicovideo.jp/material/", "?transit_from=nicoExp"], "commons", "#B091C5", "コモンズ", null],
+    [/(nw)\d+/g, ["https://news.nicovideo.jp/watch/", "?news_ref=nicoExp"], "news", "#ff8000", "ニュース", null],
+    [/(?<=dic\/)\d+/g, ["https://dic.nicovideo.jp/id/", ""], "dic", "#d00", "百科", "nicodic"],/*大百科メモ:単語[a],動画[v],生放送[l],コミュニティ[c],ユーザー[u](t/はスマホ記事)*/
+    [/mylist\/\d+/g, ["https://www.nicovideo.jp/", ""], "mylist", "#d0f", "マイリス", null],
+    [/user\/\d+(?=\/video)/g, ["https://www.nicovideo.jp/", ""], "user-v", "#00f", "ユーザー", null],/*video pageを分けて取得*/
+    [/user\/\d+/g, ["https://www.nicovideo.jp/", ""], "user", "#00f", "ユーザー", null],
+    [/(gm)\d+/g, ["https://game.nicovideo.jp/atsumaru/games/", "?link_in=nicoExp"], "game", "#0a0", "ゲーム", "atsumaru"],
+    [/(td)\d+/g, ["https://3d.nicovideo.jp/works/", ""], "thrdim", "#EC3272", "立体", "solid"],
+    [/(nq)\d+/g, ["https://q.nicovideo.jp/watch/", ""], "quiz", "#da0", "クイズ", null],
+    [/clip\/\d+/g, ["https://seiga.nicovideo.jp/", ""], "clip", "#0df", "クリップ", null],
+    [/series\/\d+/g, ["https://www.nicovideo.jp/", ""], "series", "#3fc2b7", "シリーズ", null],
+    [/^.+$/g, ["https://dic.nicovideo.jp/a/", ""], "dic-a", "#d00", "百科", null]
+].map(arr => { const nc = {};[nc.reg, nc.url, nc.name, nc.color, nc.text, nc.ad] = arr; return nc });
 const id_jump = id => (url => ~url ? window.open(url) : -1)(id_to_url(id));
 const id_to_url = id => (ret => !!ret ? ret[1].join(ret[0][0]) : -1)(ncids.map(i => [id.match(i.reg), i.url]).filter(_ => _[0])[0]);
 const url_to_id_sv = url => ncids.map(i => i.name != "dic-a" ? { id: url.match(i.reg), sv: i.name, others: i } : { id: [], sv: "another", others: i }).filter(_ => _.id)[0];

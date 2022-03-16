@@ -15,7 +15,7 @@ El.prototype.gen = function () {
     this.children.map(child =>
         child instanceof El ? element.appendChild(child.gen()) :
             child instanceof Element ? element.appendChild(child) :
-                typeof child === "string" ? element.innerText += child : -1);
+                typeof child === "string" ? element.insertAdjacentHTML("beforeend", child) : -1);
     return element;
 }
 El.prototype.attr = function (attr) {
@@ -29,7 +29,7 @@ El.appendChildren = function (element, children) {
     [children].flat().map(child =>
         child instanceof El ? element.appendChild(child.gen()) :
             child instanceof Element ? element.appendChild(child) :
-                typeof child === "string" ? element.innerText += child : -1);
+                typeof child === "string" ? element.insertAdjacentHTML("beforeend", child) : -1);
     return;
 }
 let tag_link = true;
@@ -39,13 +39,15 @@ const range_func = (...arg) => [...Array(arg[arg.length - 1]).keys()].slice(!!(a
 const prevCount = node => [...node.parentNode.children].reduce((acc, v) => [acc[0] + (acc[1] &= v !== node), (acc[1] &= v !== node)], [0, true])[0];
 const listid = parseInt((document.URL.match(/ex\d+/g) || ["ex0"])[0].slice(2), 10);
 
-const exls_default = {exlists: [
-    { name: "list0", list: [] },
-    { name: "list1", list: [] },
-    { name: "list2", list: [] },
-    { name: "list3", list: [] },
-    { name: "list4", list: [] }
-]};
+const exls_default = {
+    exlists: [
+        { name: "list0", list: [] },
+        { name: "list1", list: [] },
+        { name: "list2", list: [] },
+        { name: "list3", list: [] },
+        { name: "list4", list: [] }
+    ]
+};
 
 function scroll_p(mode) {
     if (mode >= 0) scrollTo(0, 0);
@@ -124,15 +126,11 @@ const PPC_tab_observers = [];
 function gen_ichiba_tab() {
     const PPC_tab = document.getElementsByClassName("PlayerPanelContainer-tab")[0];
     const PPC_content = document.getElementsByClassName("PlayerPanelContainer-content")[0];
-    const newtab = document.createElement("div");
-    newtab.classList.add("PlayerPanelContainer-tabItem");
+    const newtab = new El("div", ["ニコニコ市場"]).class("PlayerPanelContainer-tabItem").gen();
     newtab.classList.remove("current");
-    newtab.innerText = "ニコニコ市場";
     PPC_tab.appendChild(newtab);
     newtab.setAttribute("onclick", "[...document.getElementsByClassName(\"PlayerPanelContainer-tabItem\")].pop().addEventListener(\"click\",_=>ichiba.reloadMain(),false);");
-    const newpanel = document.createElement("div");
-    newpanel.classList.add("IchibaPanelContainer");
-    newpanel.style.height = "100%";
+    const newpanel = new El("div").class("IchibaPanelContainer").attr({ style: "height: 100%;" }).gen();
     [...document.getElementsByClassName("PlayerPanelContainer-tabItem")].map((e, i) => {
         e.style.userSelect = "none";
         e.addEventListener("click", _ => {
@@ -277,7 +275,7 @@ const openMediaMenu = (name, id = "") => {
     const media_menu = new El("div", { class: "WheelStopper", style: "" }, [
         new El("div", { class: "Snap ThreePointMenu VideoMenu MylistPageVideoMenu MylistItem-action", style: `top: ${window.pageYOffset + media_obj_el.getElementsByClassName("ThreePointMenu-button")[0].getBoundingClientRect().bottom}px; left: 1255.5px; transform: translateX(-100%);` }, [
             new El("button", ["リストから削除"]).class("VideoMenuButtonItem MylistPageVideoMenu-item MenuItem-Remove"),
-            ...(["douga", "seiga"].includes(url_to_id_sv(id).sv) ? [new El("a", ["ニコニ広告する"]).attr({ class: "VideoMenuLinkItem MenuItem-Nicoad", onclick: `window.open("https://nicoad.nicovideo.jp/video/publish/${id}", null, "top=0,left=0,width=428,height=600")` })] : [])
+            ...(url_to_id_sv(id).others.ad ? [new El("a", ["ニコニ広告する"]).attr({ class: "VideoMenuLinkItem MenuItem-Nicoad", onclick: `window.open("https://nicoad.nicovideo.jp/${url_to_id_sv(id).others.ad}/publish/${url_to_id_sv(id).id}", null, "top=0,left=0,width=428,height=600")` })] : [])
         ])
     ]).gen();
     document.body.insertAdjacentElement("beforeend", media_menu);
@@ -616,6 +614,17 @@ chrome.runtime.onMessage.addListener(m => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (document.URL.match(/^https?:\/\/www.nicovideo.jp\/my/)) {
+        const myid = document.getElementsByClassName("UserDetailsHeader-accountID")[0] ? document.getElementsByClassName("UserDetailsHeader-accountID")[0].children.pop() : "";
+        if (myid) chrome.storage.local.set({ myid: myid });
+    } else {
+        const commonheader_observer = new MutationObserver(() => {
+            commonheader_observer.disconnect();
+            const myid = (img => img ? (i => i ? i.tagName == "IMG" ? i.src.split("/").pop().split(".jpg")[0] : "" : "")(img.pop()) : "")([...document.getElementById("CommonHeader").getElementsByTagName("img")]);
+            if (myid !== "blank") chrome.storage.local.set({ myid: myid });
+        });
+        document.getElementById("CommonHeader") ? commonheader_observer.observe(document.getElementById("CommonHeader"), { childList: true }) : commonheader_observer.disconnect();
+    }
     if (url_to_id_sv(document.URL).sv !== "another") {
         const timeouts = [];
         document.addEventListener("keydown", e => {
@@ -662,6 +671,19 @@ document.addEventListener('DOMContentLoaded', () => {
             ext_tag_link();
             if (tag_link) gen_tag_link();
         });
+        const panel_observer = new MutationObserver(() => {
+            if (document.getElementsByClassName("PlayerPanelContainer")[0]) {
+                panel_observer.disconnect();
+            } else {
+                return;
+            }
+            chrome.storage.local.get({ ichiba_tab: true }, item => {
+                if (item.ichiba_tab) {
+                    gen_ichiba_tab();
+                }
+            });
+        });
+        panel_observer.observe(document.getElementsByClassName("MainContainer-playerPanel")[0], { childList: true });
     } else if (document.getElementsByClassName("Series").length) {
         chrome.storage.local.set({
             qtlist: {
@@ -765,30 +787,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
         const userpage_observer = new MutationObserver(() => { userpage_observer.disconnect(); userpage_loaded(); });
-        document.getElementsByClassName("UserPage-main")[0] && userpage_observer.observe(document.getElementsByClassName("UserPage-main")[0], { childList: true });
-    }
-});
-window.onload = () => {
-    const myid = document.getElementById("CommonHeader") ? (img => img ? (i => i ? i.tagName == "IMG" ? i.src.split("/").pop().split(".jpg")[0] : "" : "")(img.pop()) : "")([...document.getElementById("CommonHeader").getElementsByTagName("img")]) :
-        document.URL.match(/^https?:\/\/www.nicovideo.jp\/my/) && document.getElementsByClassName("UserDetailsHeader-accountID")[0] ? document.getElementsByClassName("UserDetailsHeader-accountID")[0].children.pop() : "";
-    if (myid) chrome.storage.local.set({ myid: myid });
-    if (document.URL.match(/^https?:\/\/www.nicovideo.jp\/watch\//)) {
-        chrome.storage.local.get({ ichiba_tab: true }, item => {
-            if (item.ichiba_tab) {
-                gen_ichiba_tab();
-            }
+        const userpagemain = document.getElementsByClassName("UserPage-main")[0];
+        userpagemain && userpage_observer.observe(userpagemain, { childList: true });
+    } else if (document.URL.match(/^https?:\/\/www.nicovideo.jp\/(my|user\/\d+)\/video/)) {
+        const userpagemain = document.getElementsByClassName("UserPage-main")[0];
+        const userpage_observer = new MutationObserver(() => {
+            if (!document.getElementsByClassName("VideoContainer")[0]) return;
+            chrome.storage.local.set({
+                qtlist: {
+                    name: (el => el ? el.innerText : "")(document.getElementsByClassName("UserDetailsHeader-nickname")[0]),
+                    list: [...document.getElementsByClassName('NC-MediaObject-contents')].map(l => l.href.split("/").pop()).reduce((acc, val, idx) =>
+                        [...acc, { id: val, label: [...document.getElementsByClassName('NC-MediaObjectTitle')].map(l => l.innerText)[idx] }]
+                        , []
+                    )
+                }
+            });
         });
-    } else if (document.getElementsByClassName("VideoPage").length) {
-        chrome.storage.local.set({
-            qtlist: {
-                name: (el => el ? el.innerText : "")(document.getElementsByClassName("UserDetailsHeader-nickname")[0]),
-                list: [...document.getElementsByClassName('NC-MediaObject-contents')].map(l => l.href.split("/").pop()).reduce((acc, val, idx) =>
-                    [...acc, { id: val, label: [...document.getElementsByClassName('NC-MediaObjectTitle')].map(l => l.innerText)[idx] }]
-                    , []
-                )
-            }
-        });
-    } else if (document.getElementsByClassName("illust_tag_container").length) {
+        userpagemain && userpage_observer.observe(userpagemain, { childList: true, subtree: true });
+    } else if (document.URL.match(/^https?:\/\/seiga.nicovideo.jp\/seiga\/im\d+/)) {
         const tag_observer = new MutationObserver(() => {
             ext_tag_link();
             if (tag_link) gen_tag_link();
@@ -802,7 +818,7 @@ window.onload = () => {
             ext_tag_link();
             if (tag_link) gen_tag_link();
         });
-    } else if (document.getElementById("my_clip") || document.getElementsByClassName("clip_block_outer").length) {
+    } else if (document.URL.match(/^https?:\/\/seiga.nicovideo.jp\/(my\/)?clip/)) {
         chrome.storage.local.set({
             qtlist: {
                 name: (el => el[0] ? el[0].firstElementChild.innerText : el[1] ? el[1].firstElementChild.innerText : "")([document.getElementsByClassName("title_text")[0], document.getElementsByClassName("ttl_text")[0]]),
@@ -813,4 +829,4 @@ window.onload = () => {
             }
         });
     }
-}
+});

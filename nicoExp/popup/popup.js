@@ -64,16 +64,17 @@ addEL(document, 'DOMContentLoaded', _ => {
                 chrome.tabs.sendMessage(e[0].id, { type: 'ichiba_tab', ichiba_tab: ichiba_tab.checked });
                 const which = url_to_id_sv(e[0].url);
                 let myid = items.myid;
+                const amazon_pattern = /(?<=^https{0,1}:\/\/www\.amazon\.(co\.jp|com)\/[^?]+\/)([A-Z]|\d)+(?=.*$)/g;
                 let cont_title = e[0].title.match(/(クリップしたイラスト)|(さんのシリーズ)/) ? items.qtlist.name : e[0].title.split(" - ").slice(0, -1).join(" - ");
                 apnd_ipt.value = e[0].url.match(/^https?:\/\/.+\.nicovideo\.jp/) && which.sv !== "another" ? which.id[0] + (e[0].title.split(" - ").length > 1 ? "~" : "") + cont_title : "";
-                if (!apnd_ipt.value && e[0].url.match(/(?<=^https{0,1}:\/\/www\.amazon\.(co\.jp|com)(\/.*)?\/dp\/)([A-Z]|\d)+(?=.*$)/)) apnd_ipt.value = "az" + e[0].url.match(/(?<=^https?:\/\/www\.amazon\.(co\.jp|com)(\/.*)?\/dp\/)([A-Z]|\d)+(?=.*$)/g) + "~" + e[0].title.split(" | ").slice(0, -4).join(" | ");
+                if (!apnd_ipt.value && e[0].url.match(amazon_pattern)) apnd_ipt.value = "az" + e[0].url.match(amazon_pattern) + "~" + e[0].title.split(" | ").slice(0, -4).join(" | ");
                 getEl.id("exls-qt-btn").style.display =
-                    (which.sv === "mylist" || which.sv === "clip" || which.sv === "series" || which.sv === "user-v") && !e[0].url.match(/garage/) ? "inline-block" : "none";
+                    (which.sv === "mylist" || which.sv === "clip" || which.sv === "series" || which.sv === "user-v" || e[0].url.match(/^https?:\/\/seiga\.nicovideo\.jp\/my\/clip/)) && !e[0].url.match(/garage/) ? "inline-block" : "none";
                 getEl.id("url-cp").value = (url =>
                     url.match(/^https?:\/\/[^q]+\.nicovideo\.jp/) && which.sv !== "another" && which.sv !== "clip" ? "https://nico.ms/" + which.id[0] :
                         [
                             ...[
-                                { reg: /(?<=^https?:\/\/www\.amazon\.(co\.jp|com)(\/.*)?\/dp\/)([A-Z]|\d)+(?=.*$)/g, url: ["https://nico.ms/az", ""] },
+                                { reg: amazon_pattern, url: ["https://nico.ms/az", ""] },
                                 { reg: /(?<=^https?:\/\/www\.youtube\.com\/watch\?.*v\=)([a-zA-Z]|-|_|\d)+(?=.*$)/g, url: ["https://youtu.be/", ""] },
                                 { reg: /(?<=^https?:\/\/www\.nicovideo\.jp\/my.*)/g, url: [myid ? "https://nico.ms/user/" : "https://www.nicovideo.jp/my/", myid] },
                                 { reg: /(?<=^https?:\/\/seiga\.nicovideo\.jp\/my\/)clip\/\d+/g, url: ["https://seiga.nicovideo.jp/", ""] }
