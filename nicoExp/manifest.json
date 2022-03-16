@@ -1,5 +1,5 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "nicoExpansion",
   "version": "3.5.1",
   "description": "ニコニコに関する機能",
@@ -18,18 +18,16 @@
       "run_at": "document_start"
     }
   ],
-  "action": {
+  "browser_action": {
     "default_popup": "popup/popup.html"
   },
   "background": {
-    "service_worker": "script/background.js",
-    "type":  "module"
+    "scripts": [ "script/background.js" ],
+    "persistent": false
   },
   "permissions": [
     "storage",
-    "tabs"
-  ],
-  "host_permissions": [
+    "tabs",
     "*://ext.nicovideo.jp/api/getthumbinfo/*",
     "*://seiga.nicovideo.jp/ajax/*"
   ]
