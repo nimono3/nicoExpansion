@@ -9,6 +9,8 @@ const ex_funcs = ["jpid", "link", "curl", "exls"].reduce((acc, ex_fn_id) => ({/*
         div: getEl.id(ex_fn_id + '-div')
     }
 }), {});
+chrome.browserAction && chrome.browserAction.setBadgeText({ text: "" });
+chrome.action && chrome.action.setBadgeText({ text: "" });
 
 /*セーブ・ロード*/
 const tag_link = getEl.id('tag-link');
@@ -153,11 +155,9 @@ const exls_dis_reset = () => {
 };
 const add_exls = (id, label) => {
     const apnd_obj = { id, label };
-    if (exls_stat.lists[exls_stat.sel].list.length <= 100) {
-        exls_ul.appendChild(exlsLi(apnd_obj.id, apnd_obj.label, exls_ul.childElementCount));
-        exls_stat.lists[exls_stat.sel].list.push({ ...apnd_obj });
-        chrome.storage.local.set({ exlists: exls_stat.lists });
-    }
+    exls_ul.appendChild(exlsLi(apnd_obj.id, apnd_obj.label, exls_ul.childElementCount));
+    exls_stat.lists[exls_stat.sel].list.push({ ...apnd_obj });
+    chrome.storage.local.set({ exlists: exls_stat.lists });
 };
 const del_exls = num => {
     exls_stat.lists[exls_stat.sel].list.splice(num, 1);

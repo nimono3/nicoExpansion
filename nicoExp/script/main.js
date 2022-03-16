@@ -15,7 +15,7 @@ El.prototype.gen = function () {
     this.children.map(child =>
         child instanceof El ? element.appendChild(child.gen()) :
             child instanceof Element ? element.appendChild(child) :
-                typeof child === "string" ? element.innerHTML += child : -1);
+                typeof child === "string" ? element.innerText += child : -1);
     return element;
 }
 El.prototype.attr = function (attr) {
@@ -29,7 +29,7 @@ El.appendChildren = function (element, children) {
     [children].flat().map(child =>
         child instanceof El ? element.appendChild(child.gen()) :
             child instanceof Element ? element.appendChild(child) :
-                typeof child === "string" ? element.innerHTML += child : -1);
+                typeof child === "string" ? element.innerText += child : -1);
     return;
 }
 let tag_link = true;
@@ -38,6 +38,14 @@ let tag_border = "1px solid #e5e8ea";
 const range_func = (...arg) => [...Array(arg[arg.length - 1]).keys()].slice(!!(arg.length - 1) * arg[0]);
 const prevCount = node => [...node.parentNode.children].reduce((acc, v) => [acc[0] + (acc[1] &= v !== node), (acc[1] &= v !== node)], [0, true])[0];
 const listid = parseInt((document.URL.match(/ex\d+/g) || ["ex0"])[0].slice(2), 10);
+
+const exls_default = {exlists: [
+    { name: "list0", list: [] },
+    { name: "list1", list: [] },
+    { name: "list2", list: [] },
+    { name: "list3", list: [] },
+    { name: "list4", list: [] }
+]};
 
 function scroll_p(mode) {
     if (mode >= 0) scrollTo(0, 0);
@@ -54,14 +62,13 @@ function scroll_p(mode) {
     return;
 }
 function gen_tag_link() {
-    let reg = /(sm|im)\d+/g;
     if (document.getElementsByClassName("illust_tag_container").length) {
-        [...document.getElementsByClassName("static")[0].getElementsByClassName("tag")].map(t => t.firstElementChild.innerText.match(reg) ? [t, t.firstElementChild.innerText.match(reg)] : null).filter(_ => _).map(m => {
+        [...document.getElementsByClassName("static")[0].getElementsByClassName("tag")].map(t => url_to_id_sv(t.firstElementChild.innerText).sv !== "another" ? [t, url_to_id_sv(t.firstElementChild.innerText).id] : null).filter(_ => _).map(m => {
             let t_list = [...m[0].getElementsByTagName("ul")[0].children].slice(-1)[0].cloneNode(1);
             t_list.classList.add("tag-ncEx");
             t_list.style.backgroundColor = "#ccc";
             m[1].map(str => {
-                t_list.firstElementChild.href = "https://nico.ms/" + str;
+                t_list.firstElementChild.href = "https://nico.ms/" + (str.match(/^\d+$/) ? "dic/" : "") + str;
                 m[0].getElementsByTagName("ul")[0].insertBefore(t_list.cloneNode(1), [...m[0].getElementsByTagName("ul")[0].children].slice(-1)[0]);
             });
         });
@@ -70,7 +77,7 @@ function gen_tag_link() {
                 e.style.border = "1px solid #d9a300", e.style.margin = "1px 8px 4px 0";
         });
     } else {
-        [...document.getElementsByClassName("TagItem")].map(ti => ti.innerText.match(reg) ? [ti, ti.innerText.match(reg)] : null).filter(_ => _).map(m => {
+        [...document.getElementsByClassName("TagItem")].map(ti => url_to_id_sv(ti.innerText).sv !== "another" ? [ti, url_to_id_sv(ti.innerText).id] : null).filter(_ => _).map(m => {
             m[0].style.paddingRight = (28 + 16 * m[1].length) + "px";
             let t_span = document.createElement("span");
             t_span.innerText = "~";
@@ -90,7 +97,7 @@ function gen_tag_link() {
             t_link.appendChild(t_span);
             m[1].map((str, idx) => {
                 t_link.style.right = (3 + 19 * (m[1].length - idx)) + "px";
-                t_link.href = "https://nico.ms/" + str;
+                t_link.href = "https://nico.ms/" + (str.match(/^\d+$/) ? "dic/" : "") + str;//大百科(dic)のみdic/が弾かれるため
                 m[0].appendChild(t_link.cloneNode(1));
             });
             return 0;
@@ -250,7 +257,7 @@ function openEditMylist() {
     editCloseBtn.addEventListener("click", editClose, false);
     document.getElementsByClassName("Modal-overlay")[0].addEventListener("click", e => e.target.classList.contains("Modal-overlay") && editCloseBtn.click(), false);
     document.getElementsByClassName("ModalContent-footerSubmitButton")[0].addEventListener("click", () => {
-        chrome.storage.local.get(["exlists"], item => {
+        chrome.storage.local.get(exls_default, item => {
             const exls = item.exlists;
             exls[parseInt((document.URL.match(/ex\d+/g) || ["ex0"])[0].slice(2), 10)].name = exls_title_el.value;
             chrome.storage.local.set({ exlists: exls });
@@ -260,7 +267,7 @@ function openEditMylist() {
         document.title = exls_title_el.value + " - " + document.title.split(" - ").slice(-1)[0]
         editCloseBtn.click();
     }, false);
-    chrome.storage.local.get(["exlists"], item => exls_title_el.value = item.exlists[listid].name);
+    chrome.storage.local.get(exls_default, item => exls_title_el.value = item.exlists[listid].name);
     return;
 }
 const openMediaMenu = (name, id = "") => {
@@ -285,7 +292,7 @@ const exlistUpDown = (name, mode) => {
     const index = prevCount(media_obj_el);
     const newindex = index + (mode - 0.5) * -2;
     if (mode ? media_obj_el.previousElementSibling : media_obj_el.nextElementSibling) {
-        chrome.storage.local.get(["exlists"], item => {
+        chrome.storage.local.get(exls_default, item => {
             const exlists = item.exlists;
             const ex = exlists[listid].list[index];
             media_obj_list_el.insertBefore(media_obj_el, mode ? media_obj_el.previousElementSibling : media_obj_el.nextElementSibling.nextElementSibling);//nextnextがnullのとき仕様で末尾に挿入される
@@ -303,7 +310,7 @@ const saveMemo = name => {
     const media_obj_el = media_obj_list_el.getElementsByClassName("ExMedia" + name)[0];
     const listid = parseInt((document.URL.match(/ex\d+/g) || ["ex0"])[0].slice(2), 10);
     const index = prevCount(media_obj_el);
-    chrome.storage.local.get(["exlists"], item => {
+    chrome.storage.local.get(exls_default, item => {
         const exlists = item.exlists;
         exlists[listid].list[index].label = (media_obj_el.getElementsByClassName("TextField-inputForm")[0] || { value: media_obj_el.getElementsByClassName("MylistItemMemo-preview")[0].innerText }).value;
         chrome.storage.local.set({ exlists: exlists });
@@ -373,7 +380,7 @@ const gen_media_objs = () => {
     const media_obj_list_el = exlist_container.getElementsByClassName("TempVideoMediaObjectList")[0] || exlist_container.getElementsByClassName("VideoMediaObjectList")[0];
     [...media_obj_list_el.children].map(e => e.remove());
     const listid = parseInt((document.URL.match(/ex\d+/g) || ["ex0"])[0].slice(2), 10);
-    chrome.storage.local.get(['exlists'], item => {
+    chrome.storage.local.get(exls_default, item => {
         if (item.exlists && item.exlists.length > listid) {
             const exlists = item.exlists;
             const exlist = exlists[listid];
@@ -384,7 +391,7 @@ const gen_media_objs = () => {
                 media_obj_list_el.appendChild(media_template);
                 media_template.getElementsByClassName("NC-Thumbnail-image")[0].style.background = `center center / ${["seiga", "ichiba", "user"].includes(url_to_id_sv(ex.id).sv) ? "contain" : "cover"} no-repeat #fff`;
                 if (["douga", "seiga"].includes(url_to_id_sv(ex.id).sv)) {
-                    chrome.runtime.sendMessage({ type: "get" + url_to_id_sv(ex.id).sv, media_id: ex.id, obj_name: i + ex.id });
+                    chrome.runtime.sendMessage({ type: "get", mode: url_to_id_sv(ex.id).sv, media_id: ex.id, obj_name: i + ex.id, trial: 0 });
                 } else {
                     media_template.getElementsByClassName("NC-Thumbnail-image")[0].style.backgroundImage = id_to_img(ex.id) && `${[id_to_img(ex.id)].flat().map(i => `url("${i}")`).join(',')}`;
                 }
@@ -444,7 +451,7 @@ const checkCheck = checked => {
 }
 const ext_some = names => {
     const media_obj_list_el = document.getElementsByClassName("ExlistContainer")[0].getElementsByClassName("VideoMediaObjectList")[0];
-    chrome.storage.local.get(["exlists"], item => {
+    chrome.storage.local.get(exls_default, item => {
         const exlists = item.exlists;
         [names].flat().map(name => {
             const media_obj_el = media_obj_list_el.getElementsByClassName("ExMedia" + name)[0];
@@ -474,7 +481,7 @@ const str_to_image = str => (code => (s => {
 ))(str.split('').map(s => ("0000" + s.charCodeAt().toString(16)).slice(-4)).join(''));
 const reload_canvas = () => {
     const listid = parseInt((document.URL.match(/ex\d+/g) || ["ex0"])[0].slice(2), 10);
-    chrome.storage.local.get(["exlists"], item => {
+    chrome.storage.local.get(exls_default, item => {
         const exlists = item.exlists;
         let img = str_to_image(
             exlists[listid].name
@@ -529,7 +536,7 @@ const load_exls = url => {
         console.log("original: ", str, "meta: ", meta, "stat: ", stat);
 
         if (meta.match(/^El\d+\*.*/)) {
-            chrome.storage.local.get(["exlists"], item => {
+            chrome.storage.local.get(exls_default, item => {
                 const exlists = item.exlists;
                 const exlist = exlists[parseInt((document.URL.match(/ex\d+/g) || ["ex0"])[0].slice(2), 10)];
                 exlist.list = stat.list.map(idlbl => (splited => ({ id: splited[0], label: splited[1] }))(idlbl.split(split_chars[2])));
@@ -576,44 +583,72 @@ chrome.runtime.onMessage.addListener(m => {
                 }
             }
         });
-    } else if (m.type === "resdouga") {
-        if (m.status === "success") {
-            const media_obj_el = (document.getElementsByClassName("ExMedia" + m.obj_name) || [])[0];
-            if (!media_obj_el) return;
-            media_obj_el.getElementsByClassName("NC-MediaObjectTitle")[0].innerText = m.title;
-            const thumb = media_obj_el.getElementsByClassName("NC-Thumbnail-image")[0];
-            thumb.style.backgroundImage = `url("${m.thumbnail}")`;
-            media_obj_el.getElementsByClassName("NC-VideoLength")[0].innerText = m.length;
-            media_obj_el.getElementsByClassName("NC-VideoMediaObject-description")[0].innerHTML = m.description;
-            media_obj_el.getElementsByClassName("NC-VideoRegisteredAtText-text")[0].innerText = m.firetri.replace(/T/g, " ").replace(/-/g, "/").replace(/\+.+/g, "");
-            media_obj_el.getElementsByClassName("NC-VideoMetaCount_view")[0].innerText = parseInt(m.counters.view, 10).toLocaleString();
-            media_obj_el.getElementsByClassName("NC-VideoMetaCount_comment")[0].innerText = parseInt(m.counters.comment, 10).toLocaleString();
-            media_obj_el.getElementsByClassName("NC-VideoMetaCount_mylist")[0].innerText = parseInt(m.counters.mylist, 10).toLocaleString();
-        }
-    } else if (m.type === "resseiga") {
-        if (m.status === "success") {
-            const media_obj_el = (document.getElementsByClassName("ExMedia" + m.obj_name) || [])[0];
-            if (!media_obj_el) return;
-            media_obj_el.getElementsByClassName("NC-MediaObjectTitle")[0].innerText = m.title;
-            const thumb = media_obj_el.getElementsByClassName("NC-Thumbnail-image")[0];
-            thumb.style.backgroundImage = `url("${m.thumbnail}")`;
-            media_obj_el.getElementsByClassName("NC-VideoMediaObject-description")[0].innerHTML = m.description;
-            media_obj_el.getElementsByClassName("NC-VideoRegisteredAtText-text")[0].innerText = m.created.replace(/-/g, "/");
-            media_obj_el.getElementsByClassName("NC-VideoMetaCount_view")[0].innerText = parseInt(m.counters.view, 10).toLocaleString();
-            media_obj_el.getElementsByClassName("NC-VideoMetaCount_comment")[0].innerText = parseInt(m.counters.comment, 10).toLocaleString();
-            media_obj_el.getElementsByClassName("NC-VideoMetaCount_mylist")[0].innerText = parseInt(m.counters.clip, 10).toLocaleString();
+    } else if (m.type === "res") {
+        if (m.mode === "douga") {
+            if (m.status === "success") {
+                const media_obj_el = (document.getElementsByClassName("ExMedia" + m.obj_name) || [])[0];
+                if (!media_obj_el) return;
+                media_obj_el.getElementsByClassName("NC-MediaObjectTitle")[0].innerText = m.title;
+                const thumb = media_obj_el.getElementsByClassName("NC-Thumbnail-image")[0];
+                thumb.style.backgroundImage = m.thumbnail && `url("${m.thumbnail}")`;
+                media_obj_el.getElementsByClassName("NC-VideoLength")[0].innerText = m.length;
+                media_obj_el.getElementsByClassName("NC-VideoMediaObject-description")[0].innerText = m.description;
+                media_obj_el.getElementsByClassName("NC-VideoRegisteredAtText-text")[0].innerText = m.firetri.replace(/T/g, " ").replace(/-/g, "/").replace(/\+.+/g, "");
+                media_obj_el.getElementsByClassName("NC-VideoMetaCount_view")[0].innerText = parseInt(m.counters.view, 10).toLocaleString();
+                media_obj_el.getElementsByClassName("NC-VideoMetaCount_comment")[0].innerText = parseInt(m.counters.comment, 10).toLocaleString();
+                media_obj_el.getElementsByClassName("NC-VideoMetaCount_mylist")[0].innerText = parseInt(m.counters.mylist, 10).toLocaleString();
+            }
+        } else if (m.mode === "seiga") {
+            if (m.status === "success") {
+                const media_obj_el = (document.getElementsByClassName("ExMedia" + m.obj_name) || [])[0];
+                if (!media_obj_el) return;
+                media_obj_el.getElementsByClassName("NC-MediaObjectTitle")[0].innerText = m.title;
+                const thumb = media_obj_el.getElementsByClassName("NC-Thumbnail-image")[0];
+                thumb.style.backgroundImage = m.thumbnail && `url("${m.thumbnail}")`;
+                media_obj_el.getElementsByClassName("NC-VideoMediaObject-description")[0].innerText = m.description;
+                media_obj_el.getElementsByClassName("NC-VideoRegisteredAtText-text")[0].innerText = m.created.replace(/-/g, "/");
+                media_obj_el.getElementsByClassName("NC-VideoMetaCount_view")[0].innerText = parseInt(m.counters.view, 10).toLocaleString();
+                media_obj_el.getElementsByClassName("NC-VideoMetaCount_comment")[0].innerText = parseInt(m.counters.comment, 10).toLocaleString();
+                media_obj_el.getElementsByClassName("NC-VideoMetaCount_mylist")[0].innerText = parseInt(m.counters.clip, 10).toLocaleString();
+            }
         }
     }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementsByClassName("VideoTitle").length) {
+    if (url_to_id_sv(document.URL).sv !== "another") {
+        const timeouts = [];
+        document.addEventListener("keydown", e => {
+            if (["input", "textarea"].includes(e.target.tagName.toLowerCase())) return;//文字入力中は避ける
+            const list_keycode = Array.from(`!"#$%`).indexOf(e.key);
+            if (~list_keycode) {
+                chrome.storage.local.get(exls_default, item => {
+                    const exlists = item.exlists;
+                    if (exlists.length <= list_keycode) return;
+                    exlists[list_keycode].list.push({ id: url_to_id_sv(document.URL).id[0], label: document.title.split(" - ").slice(0, -1).join(" - ") });
+                    chrome.storage.local.set({ exlists: exlists });
+                    if (url_to_id_sv(document.URL).sv === "douga") {
+                        const notice = new El("div", { class: "NoticeMessage GeneralNoticeContainer-message GeneralNoticeContainer-transition-enter-done" }, [
+                            new El("pre", [exlists[list_keycode].name + " に追加しました"])
+                        ]).gen();
+                        document.getElementsByClassName("GeneralNoticeContainer")[0].appendChild(notice);
+                        setTimeout(() => notice.remove(), 2500);
+                    } else {
+                        timeouts.map(t => clearTimeout(t));
+                        chrome.runtime.sendMessage({ type: "notice", mode: "append", seed: exlists[list_keycode].list.length });
+                        timeouts.push(setTimeout(() => chrome.runtime.sendMessage({ type: "notice", mode: "remove" }), 1200));
+                    }
+                });
+            }
+        }, false);
+    }
+    if (document.URL.match(/^https?:\/\/www\.nicovideo\.jp\/watch\//)) {
         const tag_observer = new MutationObserver(() => {
             ext_tag_link();
             if (tag_link) gen_tag_link();
         });
         tag_observer.observe(document.getElementsByClassName("TagList")[0], { childList: true });
-        tag_border = document.getElementsByClassName("TagItem")[0].style.border;
+        tag_border = document.getElementsByClassName("TagList")[0].childElementCount && document.getElementsByClassName("TagItem")[0].style.border;
         document.getElementById("CommonHeader").addEventListener('click', e => {
             if ((e.path || []).length <= 10 && (e.target.tagName || "").toLowerCase() !== "a")
                 chrome.storage.local.get({ header_scroll: 2 }, item =>
@@ -640,7 +675,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (document.URL.match(/https?:\/\/www.nicovideo.jp\/(my|user\/\d+)\/mylist\//)) {
         const userpage_loaded = () => {
             if (document.URL.match(/https?:\/\/www.nicovideo.jp\/(my|user\/\d+)\/mylist\/ex\d+/)) {
-                console.log(`load at ${listid} of Exlist`);
+                console.log(`load ${listid} of Exlist`);
                 const exlist_container = new El("div", { class: "ExlistContainer" }, [
                     new El("header", { class: "MylistHeader" }, [
                         new El("section", { class: "MylistHeader-section" }, [
@@ -704,9 +739,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementsByClassName("ErrorState")[0] ? (mlcontainer_observer.disconnect(), container_loaded()) : mlcontainer_observer.observe(document.getElementsByClassName("MylistContainer")[0], { childList: true });
             } else {
                 const container_loaded = () => {
-                    const myid = (img => img ? (i => i ? i.tagName == "IMG" ? i.src.split("/").pop().split(".jpg")[0] : "" : "")(img.pop()) : "")([...document.getElementById("CommonHeader").getElementsByTagName("img")]);
                     if (document.getElementsByClassName("ErrorState-title").length) {
-                        if (document.getElementsByClassName("ErrorState-title")[0].innerText.match(/非公開/) && document.getElementsByClassName("UserDetailsHeader-accountID")[0].innerText.match(/\d+/g)[0] === myid) {
+                        if (document.getElementsByClassName("ErrorState-title")[0].innerText.match(/非公開/)) {
                             const link_to_my = new El("a", [...document.getElementsByClassName("ErrorState")[0].children]).attr({ href: document.URL.replace(/user\/\d+/g, "my"), style: "display: block;" }).gen();
                             document.getElementsByClassName("ErrorState")[0].appendChild(link_to_my);
                             link_to_my.style.backgroundColor = "#fff";
@@ -731,13 +765,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
         const userpage_observer = new MutationObserver(() => { userpage_observer.disconnect(); userpage_loaded(); });
-        userpage_observer.observe(document.getElementsByClassName("UserPage-main")[0], { childList: true });
+        document.getElementsByClassName("UserPage-main")[0] && userpage_observer.observe(document.getElementsByClassName("UserPage-main")[0], { childList: true });
     }
 });
 window.onload = () => {
-    const myid = (img => img ? (i => i ? i.tagName == "IMG" ? i.src.split("/").pop().split(".jpg")[0] : "" : "")(img.pop()) : "")([...document.getElementById("CommonHeader").getElementsByTagName("img")]);
+    const myid = document.getElementById("CommonHeader") ? (img => img ? (i => i ? i.tagName == "IMG" ? i.src.split("/").pop().split(".jpg")[0] : "" : "")(img.pop()) : "")([...document.getElementById("CommonHeader").getElementsByTagName("img")]) :
+        document.URL.match(/^https?:\/\/www.nicovideo.jp\/my/) && document.getElementsByClassName("UserDetailsHeader-accountID")[0] ? document.getElementsByClassName("UserDetailsHeader-accountID")[0].children.pop() : "";
     if (myid) chrome.storage.local.set({ myid: myid });
-    if (document.getElementsByClassName("VideoTitle").length) {
+    if (document.URL.match(/^https?:\/\/www.nicovideo.jp\/watch\//)) {
         chrome.storage.local.get({ ichiba_tab: true }, item => {
             if (item.ichiba_tab) {
                 gen_ichiba_tab();

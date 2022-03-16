@@ -1,7 +1,7 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "nicoExpansion",
-  "version": "3.5.0",
+  "version": "3.5.1",
   "description": "ニコニコに関する機能",
   "icons": {
     "512": "icons/nicoExp512.png",
@@ -12,28 +12,24 @@
   "content_scripts": [
     {
       "matches": [
-        "*://www.nicovideo.jp/watch/*",
-        "*://www.nicovideo.jp/my/*",
-        "*://www.nicovideo.jp/user/*",
-        "*://www.nicovideo.jp/series/*",
-        "*://seiga.nicovideo.jp/seiga/*",
-        "*://seiga.nicovideo.jp/my/*",
-        "*://seiga.nicovideo.jp/clip/*"
+        "*://*.nicovideo.jp/*"
       ],
       "js": [ "script/ncid.js", "script/main.js" ],
       "run_at": "document_start"
     }
   ],
-  "browser_action": {
+  "action": {
     "default_popup": "popup/popup.html"
   },
   "background": {
-    "scripts": [ "script/background.js" ],
-    "persistent": false
+    "service_worker": "script/background.js",
+    "type":  "module"
   },
   "permissions": [
     "storage",
-    "tabs",
+    "tabs"
+  ],
+  "host_permissions": [
     "*://ext.nicovideo.jp/api/getthumbinfo/*",
     "*://seiga.nicovideo.jp/ajax/*"
   ]
