@@ -2,6 +2,7 @@ const getEl = { id: id => document.getElementById(id) };
 const addEL = (el, type, func) => { el.addEventListener(type, func, false); };
 const addELs = array => array.map(arr => addEL(...arr));
 const header_scroll = getEl.id('click-scroll');
+const exdet_open = getEl.id("exdet-open");
 const ex_funcs = ["jpid", "link", "curl", "exls"].reduce((acc, ex_fn_id) => ({/*機能の一覧( 描画設定のチェックボックスと機能の要素のelementを管理する )*/
     ...acc,
     [ex_fn_id]: {
@@ -32,6 +33,7 @@ addEL(document, 'DOMContentLoaded', _ => {
             { name: "list3", list: [] },
             { name: "list4", list: [] }
         ],
+        exdet: -2,
         myid: "",
         qtlist: { name: "", list: [] },
         header_scroll: 2,
@@ -53,10 +55,13 @@ addEL(document, 'DOMContentLoaded', _ => {
                 getEl.id("exls-sel").appendChild(exlsOpt(key, exls_stat.lists[key].name))
             }
             exls_stat.sel = exls_sel.value = items.exls_sel;
+            exdet_open.value = items.exdet < 0 ? items.exdet : 0;
+            getEl.id("exls-det").open = !!(items.exdet % 2);
             lname_ipt.value = exls_stat.lists[exls_stat.sel].name;
             getEl.id("exls-opt").style.display = "none";
             for (const el of exls_stat.lists[exls_stat.sel].list) exls_ul.appendChild(exlsLi(el.id, el.label, exls_ul.childElementCount));
             header_scroll.value = items.header_scroll;
+            header_scroll.parentNode.style.borderColor = ~header_scroll.value ? "#007cff" : "#808080";
             tag_link.checked = items.tag_link;
             ichiba_tab.checked = items.ichiba_tab;
             chrome.tabs.query({ active: true, currentWindow: true }, e => {
@@ -68,8 +73,8 @@ addEL(document, 'DOMContentLoaded', _ => {
                 let cont_title = e[0].title.match(/(クリップしたイラスト)|(さんのシリーズ)/) ? items.qtlist.name : e[0].title.split(" - ").slice(0, -1).join(" - ");
                 apnd_ipt.value = e[0].url.match(/^https?:\/\/.+\.nicovideo\.jp/) && which.sv !== "another" ? which.id[0] + (e[0].title.split(" - ").length > 1 ? "~" : "") + cont_title : "";
                 if (!apnd_ipt.value && e[0].url.match(amazon_pattern)) apnd_ipt.value = "az" + e[0].url.match(amazon_pattern) + "~" + e[0].title.split(" | ").slice(0, -4).join(" | ");
-                getEl.id("exls-qt-btn").style.display =
-                    (which.sv === "mylist" || which.sv === "clip" || which.sv === "series" || which.sv === "user-v" || e[0].url.match(/^https?:\/\/seiga\.nicovideo\.jp\/my\/clip/)) && !e[0].url.match(/garage/) ? "inline-block" : "none";
+                const quote_pattern = (which.sv === "mylist" || which.sv === "clip" || which.sv === "series" || which.sv === "user-v" || e[0].url.match(/^https?:\/\/seiga\.nicovideo\.jp\/my\/clip/)) && !e[0].url.match(/garage/);
+                getEl.id("exls-qt-btn").style.display = quote_pattern ? (chrome.tabs.sendMessage(e[0].id, { type: 'quote_list' }), "inline-block") : "none";
                 getEl.id("url-cp").value = (url =>
                     url.match(/^https?:\/\/[^q]+\.nicovideo\.jp/) && which.sv !== "another" && which.sv !== "clip" ? "https://nico.ms/" + which.id[0] :
                         [
@@ -87,7 +92,8 @@ addEL(document, 'DOMContentLoaded', _ => {
     );
     addELs([
         [exls_sel, _ => { chrome.storage.local.set({ exls_sel: exls_sel.value }); exls_dis_reset(); reload_canvas(); }],
-        [header_scroll, _ => chrome.storage.local.set({ header_scroll: header_scroll.value })],
+        [header_scroll, _ => (chrome.storage.local.set({ header_scroll: header_scroll.value }), header_scroll.parentNode.style.borderColor = ~header_scroll.value ? "#007cff" : "#808080")],
+        [exdet_open, _ => (chrome.storage.local.set({ exdet: exdet_open.value < 0 ? exdet_open.value : getEl.id("exls-det").open - 0 }))],
         [tag_link, _ => {
             chrome.storage.local.set({ tag_link: tag_link.checked });
             chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'tag_link', tag_link: tag_link.checked }));
@@ -97,6 +103,7 @@ addEL(document, 'DOMContentLoaded', _ => {
             chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'ichiba_tab', ichiba_tab: ichiba_tab.checked }));
         }]
     ].map(arr => [arr[0], "change", arr[1]]));
+    addEL(getEl.id("exls-det"), "click", _ => (exdet_open.value < 0 || chrome.storage.local.set({ exdet: !getEl.id("exls-det").open - 0 })));
 });
 /*ExList--{*/
 const exls_ul = getEl.id("exls-ul");
@@ -141,11 +148,13 @@ const exlsOpt = (val, lab) => {
     return opt_el;
 };
 const change_lname = val => {
-    if (val && split_chars.filter(f => ~val.indexOf(f)).length === 0) {
+    if (val) {
+        split_chars.map(c => val = val.replace(c, ""));
         lname_ipt.value = val;
         exls_sel.options[exls_sel.value - 0].label = val;
         exls_stat.lists[exls_stat.sel].name = val;
         chrome.storage.local.set({ exlists: exls_stat.lists });
+        chrome.contextMenus.update("apndExls-" + exls_stat.sel, { title: val });
     }
 };
 const exls_dis_reset = () => {
@@ -332,10 +341,12 @@ function searcher_nico(link_parts, mode) {
         const act_url = e[0].url;
         const act_host = act_url.split('/')[2];
         let search_word = "";
-        if (act_host == "www.google.com" | act_host == "www.google.co.jp") {
+        if (act_host == "www.google.com" | act_host == "www.google.co.jp" | act_host == "duckduckgo.com") {
             search_word = new URLSearchParams(act_url.slice(act_url.indexOf('?'))).get("q");
         } else if (act_host == "www.youtube.com") {
             search_word = new URLSearchParams(act_url.slice(act_url.indexOf('?'))).get("search_query");
+        } else if (act_host == "search.yahoo.co.jp") {
+            search_word = new URLSearchParams(act_url.slice(act_url.indexOf('?'))).get("p");
         } else {
             search_word = (new URLSearchParams(act_url.split('/').pop().split('?')[0]) + []).slice(0, -1);
         }

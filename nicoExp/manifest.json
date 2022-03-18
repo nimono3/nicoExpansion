@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "nicoExpansion",
-  "version": "3.5.2",
+  "version": "3.5.9",
   "description": "ニコニコに関する機能",
   "icons": {
     "512": "icons/nicoExp512.png",
@@ -23,14 +23,16 @@
   },
   "background": {
     "service_worker": "script/background.js",
-    "type":  "module"
+    "type": "module"
   },
   "permissions": [
     "storage",
-    "tabs"
+    "tabs",
+    "contextMenus"
   ],
   "host_permissions": [
     "*://ext.nicovideo.jp/api/getthumbinfo/*",
-    "*://seiga.nicovideo.jp/ajax/*"
+    "*://seiga.nicovideo.jp/ajax/*",
+    "*://*.nicovideo.jp/*"
   ]
 }

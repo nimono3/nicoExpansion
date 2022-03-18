@@ -89,7 +89,7 @@ select {
     font-weight: bold;
 }
 
-#click-scroll {
+.inbtn-sel {
     flex: 1;
     font-size: 14px;
     border: none;

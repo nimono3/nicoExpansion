@@ -173,6 +173,13 @@ function gen_ichiba_tab() {
         });
     });
 };
+function apndExls(index, content_id, content_label) {
+    chrome.storage.local.get(exls_default, item => {
+        const exlists = item.exlists;
+        exlists[index].list.push({ id: content_id || "sm0", label: content_label || content_id || "sm0" });
+        chrome.storage.local.set({ exlists: exlists });
+    });
+}
 function openShare() {
     const share_modal = new El("div", { class: "NC-Fade NC-Modal NC-ShareModal MylistShareModal", style: "transition: opacity 200ms ease-in-out 0s; opacity: 1;" }, [
         new El("div", { class: "NC-Modal-overlay" }, [
@@ -257,8 +264,9 @@ function openEditMylist() {
     document.getElementsByClassName("ModalContent-footerSubmitButton")[0].addEventListener("click", () => {
         chrome.storage.local.get(exls_default, item => {
             const exls = item.exlists;
-            exls[parseInt((document.URL.match(/ex\d+/g) || ["ex0"])[0].slice(2), 10)].name = exls_title_el.value;
+            exls[listid].name = exls_title_el.value;
             chrome.storage.local.set({ exlists: exls });
+            chrome.runtime.sendMessage({ type: "renameMenu", id: "apndExls-" + listid, title: exls_title_el.value });
             is_exls_imgload = 0;
         });
         document.getElementsByClassName("MylistHeader-name")[0].innerText = exls_title_el.value;
@@ -581,6 +589,48 @@ chrome.runtime.onMessage.addListener(m => {
                 }
             }
         });
+    } else if (m.type === "quote_list") {
+        if (document.getElementsByClassName("Series").length) {
+            chrome.storage.local.set({
+                qtlist: {
+                    name: document.title.match(/((?<=^「).*(?=（全\d+件）」))/g)[0],
+                    list: [...document.getElementsByClassName('NC-Link')].reduce((acc, val) =>
+                        [...acc, { id: val.href.split("/").pop(), label: val.getElementsByTagName("h2")[0].innerText }]
+                        , []
+                    )
+                }
+            });
+        } else if (document.URL.match(/^https?:\/\/www.nicovideo.jp\/(my|user\/\d+)\/mylist\/\d+/) && !document.getElementsByClassName("ErrorState-title").length) {
+            chrome.storage.local.set({
+                qtlist: {
+                    name: (el => el ? el.innerText : "")(document.getElementsByClassName("MylistHeader-name")[0]),
+                    list: [...document.getElementsByClassName('NC-MediaObject-contents')].map(l => l.href.split("/").pop()).reduce((acc, val, idx) =>
+                        [...acc, { id: val, label: [...document.getElementsByClassName('NC-MediaObjectTitle')].map(l => l.innerText)[idx] }]
+                        , [])
+                }
+            });
+        } else if (document.URL.match(/^https?:\/\/www.nicovideo.jp\/(my|user\/\d+)\/video/)) {
+            if (!document.getElementsByClassName('NC-MediaObject-contents').length) return;
+            chrome.storage.local.set({
+                qtlist: {
+                    name: (el => el ? el.innerText : "")(document.getElementsByClassName("UserDetailsHeader-nickname")[0]),
+                    list: [...document.getElementsByClassName('NC-MediaObject-contents')].map(l => l.href.split("/").pop()).reduce((acc, val, idx) =>
+                        [...acc, { id: val, label: [...document.getElementsByClassName('NC-MediaObjectTitle')].map(l => l.innerText)[idx] }]
+                        , []
+                    )
+                }
+            });
+        } else if (document.URL.match(/^https?:\/\/seiga.nicovideo.jp\/(my\/)?clip/)) {
+            chrome.storage.local.set({
+                qtlist: {
+                    name: (el => el[0] ? el[0].firstElementChild.innerText : el[1] ? el[1].firstElementChild.innerText : "")([document.getElementsByClassName("title_text")[0], document.getElementsByClassName("ttl_text")[0]]),
+                    list: [...document.getElementsByClassName('text_ttl')].reduce((acc, val) =>
+                        [...acc, { id: val.firstElementChild.href.split("/").pop(), label: val.firstElementChild.innerText }]
+                        , []
+                    )
+                }
+            });
+        }
     } else if (m.type === "res") {
         if (m.mode === "douga") {
             if (m.status === "success") {
@@ -610,12 +660,14 @@ chrome.runtime.onMessage.addListener(m => {
                 media_obj_el.getElementsByClassName("NC-VideoMetaCount_mylist")[0].innerText = parseInt(m.counters.clip, 10).toLocaleString();
             }
         }
+    } else if (m.type === "apndExls") {
+        url_to_id_sv(m.conturl).id[0] ? apndExls(m.index, url_to_id_sv(m.conturl).id[0], url_to_id_sv(m.conturl).id[0]) : console.log("append exlist error on URL:" + m.conturl);
     }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.URL.match(/^https?:\/\/www.nicovideo.jp\/my/)) {
-        const myid = document.getElementsByClassName("UserDetailsHeader-accountID")[0] ? document.getElementsByClassName("UserDetailsHeader-accountID")[0].children.pop() : "";
+    if (document.URL.match(/^https?:\/\/www\.nicovideo\.jp\/my/)) {
+        const myid = document.getElementsByClassName("UserDetailsHeader-accountID")[0] ? document.getElementsByClassName("UserDetailsHeader-accountID")[0].childNodes[1].textContent : "";
         if (myid) chrome.storage.local.set({ myid: myid });
     } else {
         const commonheader_observer = new MutationObserver(() => {
@@ -625,7 +677,55 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.getElementById("CommonHeader") ? commonheader_observer.observe(document.getElementById("CommonHeader"), { childList: true }) : commonheader_observer.disconnect();
     }
+    if (document.URL.match(/^https?:\/.+\.nicovideo\.jp\/.*/)) {
+        /*
+        if (document.URL.match(/ranking|search/)) {
+            const presskey = {};
+            const over_el = [];
+            const downfunc = e => {
+                presskey[e.key] = true;
+                console.log(over_el);
+                if (over_el.length) {
+                    if (checkKeys(presskey, 1, 2, 3, 4, 5)) {
+                        chrome.storage.local.get(exls_default, item => {
+                            (tooltip => {
+                                tooltip.innerText = item.exlists[getKey(presskey, 1, 2, 3, 4, 5) - 1].name;
+                                tooltip.style.left = over_el.slice(-1)[0].getBoundingClientRect().left + over_el.slice(-1)[0].clientWidth / 2 + "px";
+                                tooltip.style.transform = "translateX(-50%)";
+                            })([...document.getElementsByClassName("NC-WatchLaterButton-tooltip"), ...document.getElementsByClassName("Tooltip")].pop());
+                        });
+                    } else {
+                        const tooltip = [...document.getElementsByClassName("NC-WatchLaterButton-tooltip"), ...document.getElementsByClassName("Tooltip")].pop();
+                        tooltip && (tooltip.innerText = "あとで見る");
+                    }
+                }
+            };
+            document.addEventListener("keydown", downfunc);
+            const upfunc = e => {
+                presskey[e.key] = false;
+                const tooltip = [...document.getElementsByClassName("NC-WatchLaterButton-tooltip"), ...document.getElementsByClassName("Tooltip")].pop();
+                tooltip && (tooltip.innerText = "あとで見る");
+            };
+            document.addEventListener("keyup", upfunc);
+            const checkKeys = (obj, ...keys) => keys.reduce((acc, key) => acc || obj[key], false);
+            const clearObj = obj => Object.keys(obj).map(k => obj[k] = null);
+            const getKey = (obj, ...keys) => keys.reduce((acc, key) => acc || (obj[key] && key + ""), null);
+            document.addEventListener("click", e => {
+                if (e.target.classList.contains("ExAddButton-button") && checkKeys(presskey, 1, 2, 3, 4, 5)) {
+                    e.preventDefault();
+                    const link_et_title = {
+                        link: e.target.classList.contains("WatchLaterButton-button") ? e.target.parentNode.parentNode.getElementsByTagName("a")[0].href : e.target.parentNode.parentNode.parentNode.parentNode.href,
+                        title: e.target.classList.contains("WatchLaterButton-button") ? e.target.parentNode.parentNode.getElementsByClassName("thumb")[0].alt : e.target.parentNode.parentNode.getElementsByClassName("NC-Thumbnail-image")[0].getAttribute("aria-label")
+                    };
+                    console.log(getKey(presskey, 1, 2, 3, 4, 5) - 1, " / ", url_to_id_sv(link_et_title.link).id[0], " / ", link_et_title.title);
+                }
+                clearObj(presskey);
+            });
+            document.addEventListener("mouseover", changeTooltip);
+        }*/
+    }
     if (url_to_id_sv(document.URL).sv !== "another") {
+        console.log("Here is niconicontents page.");
         const timeouts = [];
         document.addEventListener("keydown", e => {
             if (["input", "textarea"].includes(e.target.tagName.toLowerCase())) return;//文字入力中は避ける
@@ -652,24 +752,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }, false);
     }
     if (document.URL.match(/^https?:\/\/www\.nicovideo\.jp\/watch\//)) {
+        if (document.getElementsByClassName("ErrorMessage")[0]) return;
         const tag_observer = new MutationObserver(() => {
             ext_tag_link();
             if (tag_link) gen_tag_link();
         });
-        tag_observer.observe(document.getElementsByClassName("TagList")[0], { childList: true });
-        tag_border = document.getElementsByClassName("TagList")[0].childElementCount && document.getElementsByClassName("TagItem")[0].style.border;
+        const taglist = document.getElementsByClassName("TagList")[0];
+        if (taglist) {
+            tag_observer.observe(taglist, { childList: true });
+            tag_border = taglist.childElementCount && document.getElementsByClassName("TagItem")[0].style.border;
+            chrome.storage.local.get({
+                tag_link: true
+            }, items => {
+                tag_link = items.tag_link;
+                ext_tag_link();
+                if (tag_link) gen_tag_link();
+            });
+        }
         document.getElementById("CommonHeader").addEventListener('click', e => {
             if ((e.path || []).length <= 10 && (e.target.tagName || "").toLowerCase() !== "a")
                 chrome.storage.local.get({ header_scroll: 2 }, item =>
                     scroll_p(parseInt(item.header_scroll))
                 );
-        });
-        chrome.storage.local.get({
-            tag_link: true
-        }, items => {
-            tag_link = items.tag_link;
-            ext_tag_link();
-            if (tag_link) gen_tag_link();
         });
         const panel_observer = new MutationObserver(() => {
             if (document.getElementsByClassName("PlayerPanelContainer")[0]) {
@@ -683,20 +787,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-        panel_observer.observe(document.getElementsByClassName("MainContainer-playerPanel")[0], { childList: true });
-    } else if (document.getElementsByClassName("Series").length) {
-        chrome.storage.local.set({
-            qtlist: {
-                name: document.title.match(/((?<=^「).*(?=（全\d+件）」))/g)[0],
-                list: [...document.getElementsByClassName('NC-Link')].reduce((acc, val) =>
-                    [...acc, { id: val.href.split("/").pop(), label: val.getElementsByTagName("h2")[0].innerText }]
-                    , []
-                )
-            }
-        });
-    } else if (document.URL.match(/https?:\/\/www.nicovideo.jp\/(my|user\/\d+)\/mylist\//)) {
+        const mcpp = document.getElementsByClassName("MainContainer-playerPanel")[0];
+        mcpp && panel_observer.observe(mcpp, { childList: true });
+    } else if (document.URL.match(/https?:\/\/www\.nicovideo\.jp\/(my|user\/\d+)\/mylist\/(ex)?\d+/)) {
         const userpage_loaded = () => {
-            if (document.URL.match(/https?:\/\/www.nicovideo.jp\/(my|user\/\d+)\/mylist\/ex\d+/)) {
+            if (document.URL.match(/https?:\/\/www\.nicovideo\.jp\/(my|user\/\d+)\/mylist\/ex\d+/)) {
                 console.log(`load ${listid} of Exlist`);
                 const exlist_container = new El("div", { class: "ExlistContainer" }, [
                     new El("header", { class: "MylistHeader" }, [
@@ -768,15 +863,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             link_to_my.style.backgroundColor = "#fff";
                             link_to_my.style.border = "5px solid #d3d3d3";
                         }
-                    } else {
-                        chrome.storage.local.set({
-                            qtlist: {
-                                name: (el => el ? el.innerText : "")(document.getElementsByClassName("MylistHeader-name")[0]),
-                                list: [...document.getElementsByClassName('NC-MediaObject-contents')].map(l => l.href.split("/").pop()).reduce((acc, val, idx) =>
-                                    [...acc, { id: val, label: [...document.getElementsByClassName('NC-MediaObjectTitle')].map(l => l.innerText)[idx] }]
-                                    , [])
-                            }
-                        });
                     }
                 };
                 const mlcontainer_observer = new MutationObserver(() => {
@@ -789,22 +875,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const userpage_observer = new MutationObserver(() => { userpage_observer.disconnect(); userpage_loaded(); });
         const userpagemain = document.getElementsByClassName("UserPage-main")[0];
         userpagemain && userpage_observer.observe(userpagemain, { childList: true });
-    } else if (document.URL.match(/^https?:\/\/www.nicovideo.jp\/(my|user\/\d+)\/video/)) {
-        const userpagemain = document.getElementsByClassName("UserPage-main")[0];
-        const userpage_observer = new MutationObserver(() => {
-            if (!document.getElementsByClassName("VideoContainer")[0]) return;
-            chrome.storage.local.set({
-                qtlist: {
-                    name: (el => el ? el.innerText : "")(document.getElementsByClassName("UserDetailsHeader-nickname")[0]),
-                    list: [...document.getElementsByClassName('NC-MediaObject-contents')].map(l => l.href.split("/").pop()).reduce((acc, val, idx) =>
-                        [...acc, { id: val, label: [...document.getElementsByClassName('NC-MediaObjectTitle')].map(l => l.innerText)[idx] }]
-                        , []
-                    )
-                }
-            });
-        });
-        userpagemain && userpage_observer.observe(userpagemain, { childList: true, subtree: true });
-    } else if (document.URL.match(/^https?:\/\/seiga.nicovideo.jp\/seiga\/im\d+/)) {
+    } else if (document.URL.match(/^https?:\/\/seiga\.nicovideo\.jp\/seiga\/im\d+/)) {
+        if (document.getElementsByClassName("error-wrapper")[0]) {
+            return;
+        }
         const tag_observer = new MutationObserver(() => {
             ext_tag_link();
             if (tag_link) gen_tag_link();
@@ -817,16 +891,6 @@ document.addEventListener('DOMContentLoaded', () => {
             tag_link = items.tag_link;
             ext_tag_link();
             if (tag_link) gen_tag_link();
-        });
-    } else if (document.URL.match(/^https?:\/\/seiga.nicovideo.jp\/(my\/)?clip/)) {
-        chrome.storage.local.set({
-            qtlist: {
-                name: (el => el[0] ? el[0].firstElementChild.innerText : el[1] ? el[1].firstElementChild.innerText : "")([document.getElementsByClassName("title_text")[0], document.getElementsByClassName("ttl_text")[0]]),
-                list: [...document.getElementsByClassName('text_ttl')].reduce((acc, val) =>
-                    [...acc, { id: val.firstElementChild.href.split("/").pop(), label: val.firstElementChild.innerText }]
-                    , []
-                )
-            }
         });
     }
 });

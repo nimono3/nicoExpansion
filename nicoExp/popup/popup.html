@@ -45,7 +45,7 @@
         <summary><span class="sum-arw" id="config-sum">▶</span>&nbsp;設定&nbsp;―――――――――――</summary>
         <label>
             <span style="display: flex;" id="scroll-span">
-                スクロール<select id="click-scroll">
+                スクロール<select id="click-scroll" class="inbtn-sel">
                     <option value="-1" label="スクロール無し"></option>
                     <option value="0" label="トップ"></option>
                     <option value="1" label="投稿日時,再生数"></option>
@@ -55,12 +55,21 @@
                 </select>
             </span>
         </label>
-        <label><input type="checkbox" checked="checked" id="tag-link"  class="setting-check" /><span>拡張タグ</span></label>
+        <label><input type="checkbox" checked="checked" id="tag-link" class="setting-check" /><span>拡張タグ</span></label>
         <label><input type="checkbox" checked="checked" id="draw-jpid" class="setting-check" /><span>IDジャンプ</span></label>
         <label><input type="checkbox" checked="checked" id="draw-link" class="setting-check" /><span>ニコニコ検索</span></label>
         <label><input type="checkbox" checked="checked" id="draw-curl" class="setting-check" /><span>ニコニコ共有</span></label>
-        <label><input type="checkbox" checked="checked" id="draw-exls" class="setting-check" /><span>拡張マイリスト</span></label>
-        <label><input type="checkbox" checked="checked" id="ichiba-tab"class="setting-check" /><span>タブ市場</span></label>
+        <label>
+            <input type="checkbox" checked="checked" id="draw-exls" class="setting-check" />
+            <span style="display: flex;">
+                拡張マイリスト<select id="exdet-open" class="inbtn-sel">
+                    <option value="-2" label="規定で折畳" selected></option>
+                    <option value="-1" label="規定で展開"></option>
+                    <option value="0" label="状態を保持"></option>
+                </select>
+            </span>
+        </label>
+        <label><input type="checkbox" checked="checked" id="ichiba-tab" class="setting-check" /><span>タブ市場</span></label>
         <br />
         <a href="https://forms.gle/6EqDTdddMcrjRXQ88" title="報告, 改善案, 要望, 質問を受付" target="_blank" rel="noopener noreferrer"><b>フィードバック</b></a><br />
     </details>
