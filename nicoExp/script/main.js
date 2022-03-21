@@ -1,36 +1,43 @@
 let El;
 El = function (tag, ...others) {
-    this.e = {};
-    this.e.tag = tag;
-    this.children = (others.length) ? others.pop() : [];
-    this.e.attr = (others.length) ? others.pop() : {};
-    this.e.style = (others.length) ? others.pop() : {};
-    this.e.inText = (others.length) ? others.pop() : "";
-}
-El.prototype.gen = function () {
-    const element = document.createElement(this.e.tag);
-    if (this.e.inText) element.innerText = this.e.inText;
-    Object.keys(this.e.style).map(key => element.style[key] = this.e.style[key]);
-    Object.keys(this.e.attr).map(key => element.setAttribute(key, this.e.attr[key]));
-    this.children.map(child =>
-        child instanceof El ? element.appendChild(child.gen()) :
-            child instanceof Element ? element.appendChild(child) :
-                typeof child === "string" ? element.insertAdjacentHTML("beforeend", child) : -1);
-    return element;
-}
-El.prototype.attr = function (attr) {
-    Object.keys(attr).map(at => this.e.attr[at] = attr[at]);
-    return this;
-}
-El.prototype.class = function (class_name) {
-    return this.attr({ class: class_name });
+    return {
+        type: "ElObject",
+        children: (others.length) ? others.pop() : [],
+        e: {
+            tag: tag,
+            attr: (others.length) ? others.pop() : {},
+            style: (others.length) ? others.pop() : {},
+            inText: (others.length) ? others.pop() : ""
+        },
+        gen: function () {
+            const element = document.createElement(this.e.tag);
+            if (this.e.inText) element.innerText = this.e.inText;
+            Object.keys(this.e.style).map(key => element.style[key] = this.e.style[key]);
+            Object.keys(this.e.attr).map(key => element.setAttribute(key, this.e.attr[key]));
+            this.children.map(child =>
+                child.type === "ElObject" ? element.appendChild(child.gen()) :
+                    child instanceof Element ? element.appendChild(child) :
+                        typeof child === "string" ? element.insertAdjacentHTML("beforeend", child) : -1);
+            return element
+        },
+        attr: function (attr) {
+            Object.keys(attr).map(at => this.e.attr[at] = attr[at]);
+            return this;
+        },
+        class: function (class_name) {
+            return this.attr({ class: class_name });
+        }
+    };
 }
 El.appendChildren = function (element, children) {
     [children].flat().map(child =>
-        child instanceof El ? element.appendChild(child.gen()) :
+        child.type === "ElObject" ? element.appendChild(child.gen()) :
             child instanceof Element ? element.appendChild(child) :
                 typeof child === "string" ? element.insertAdjacentHTML("beforeend", child) : -1);
     return;
+}
+Node.prototype.get = function (query) {
+    return [...(this.querySelectorAll(query) || [])];
 }
 let tag_link = true;
 let tag_border = "1px solid #e5e8ea";
@@ -52,34 +59,34 @@ const exls_default = {
 function scroll_p(mode) {
     if (mode >= 0) scrollTo(0, 0);
     if (range_func(1, 1 + 4).includes(mode)) {
-        const common_header = document.getElementById("CommonHeader") || { clientHeight: 36, style: { position: "sticky" } };//取得失敗用
+        const common_header = document.get("#CommonHeader")[0] || { clientHeight: 36, style: { position: "sticky" } };//取得失敗用
         const correction = common_header.clientHeight * (common_header.style.position === "sticky");
-        scrollTo(0, document.getElementsByClassName(([
-            'HeaderContainer-row',
-            'TagContainer',
-            'MainContainer',
-            'BottomContainer'
+        scrollTo(0, document.get(([
+            '.HeaderContainer-row',
+            '.TagContainer',
+            '.MainContainer',
+            '.BottomContainer'
         ])[mode - 1])[0].previousElementSibling.getBoundingClientRect().bottom - correction);
     }
     return;
 }
 function gen_tag_link() {
-    if (document.getElementsByClassName("illust_tag_container").length) {
-        [...document.getElementsByClassName("static")[0].getElementsByClassName("tag")].map(t => url_to_id_sv(t.firstElementChild.innerText).sv !== "another" ? [t, url_to_id_sv(t.firstElementChild.innerText).id] : null).filter(_ => _).map(m => {
-            let t_list = [...m[0].getElementsByTagName("ul")[0].children].slice(-1)[0].cloneNode(1);
+    if (document.get(".illust_tag_container").length) {
+        document.get(".static")[0].get(".tag").map(t => url_to_id_sv(t.firstElementChild.innerText).sv !== "another" ? [t, url_to_id_sv(t.firstElementChild.innerText).id] : null).filter(_ => _).map(m => {
+            let t_list = [...m[0].get("ul")[0].children].slice(-1)[0].cloneNode(1);
             t_list.classList.add("tag-ncEx");
             t_list.style.backgroundColor = "#ccc";
             m[1].map(str => {
                 t_list.firstElementChild.href = "https://nico.ms/" + (str.match(/^\d+$/) ? "dic/" : "") + str;
-                m[0].getElementsByTagName("ul")[0].insertBefore(t_list.cloneNode(1), [...m[0].getElementsByTagName("ul")[0].children].slice(-1)[0]);
+                m[0].get("ul")[0].insertBefore(t_list.cloneNode(1), [...m[0].get("ul")[0].children].slice(-1)[0]);
             });
         });
-        [...document.getElementsByClassName("static")[0].getElementsByClassName("tag")].map((e, i) => {
-            if (document.getElementsByClassName("tag_list_block")[0].firstElementChild.children[i].getElementsByClassName("delete")[0].style.display === "none")
+        document.get(".static")[0].get(".tag").map((e, i) => {
+            if (document.get(".tag_list_block")[0].firstElementChild.children[i].get(".delete")[0].style.display === "none")
                 e.style.border = "1px solid #d9a300", e.style.margin = "1px 8px 4px 0";
         });
     } else {
-        [...document.getElementsByClassName("TagItem")].map(ti => url_to_id_sv(ti.innerText).sv !== "another" ? [ti, url_to_id_sv(ti.innerText).id] : null).filter(_ => _).map(m => {
+        document.get(".TagItem").map(ti => url_to_id_sv(ti.innerText).sv !== "another" ? [ti, url_to_id_sv(ti.innerText).id] : null).filter(_ => _).map(m => {
             m[0].style.paddingRight = (28 + 16 * m[1].length) + "px";
             let t_span = document.createElement("span");
             t_span.innerText = "~";
@@ -104,41 +111,41 @@ function gen_tag_link() {
             });
             return 0;
         });
-        [...document.getElementsByClassName("is-locked")].map(il => { il.style.border = "1px solid #d9a300"; });
+        document.get(".is-locked").map(il => { il.style.border = "1px solid #d9a300"; });
     }
     return;
 }
 function ext_tag_link() {
-    if (document.getElementsByClassName("illust_tag_container").length) {
-        [...document.getElementsByClassName("tag-ncEx")].map(t => t.remove());
-        [...document.getElementsByClassName("static")[0].getElementsByClassName("tag")].map((e, i) => {
+    if (document.get(".illust_tag_container").length) {
+        document.get(".tag-ncEx").map(t => t.remove());
+        document.get(".static")[0].get(".tag").map((e, i) => {
             e.style.border = tag_border, e.style.margin = "2px 10px 5px 0";
         });
     } else {
-        [...document.getElementsByClassName("TagItem-nicoExpLink")].map(tinel => {
+        document.get(".TagItem-nicoExpLink").map(tinel => {
             tinel.parentNode.style.paddingRight = "28px";
             tinel.remove();
         });
-        [...document.getElementsByClassName("TagItem")].map(il => { il.style.border = tag_border; });
+        document.get(".TagItem").map(il => { il.style.border = tag_border; });
     }
 }
 const PPC_tab_observers = [];
 function gen_ichiba_tab() {
-    const PPC_tab = document.getElementsByClassName("PlayerPanelContainer-tab")[0];
-    const PPC_content = document.getElementsByClassName("PlayerPanelContainer-content")[0];
-    const newtab = new El("div", ["ニコニコ市場"]).class("PlayerPanelContainer-tabItem").gen();
+    const PPC_tab = document.get(".PlayerPanelContainer-tab")[0];
+    const PPC_content = document.get(".PlayerPanelContainer-content")[0];
+    const newtab = El("div", ["ニコニコ市場"]).class("PlayerPanelContainer-tabItem").gen();
     newtab.classList.remove("current");
     PPC_tab.appendChild(newtab);
-    newtab.setAttribute("onclick", "[...document.getElementsByClassName(\"PlayerPanelContainer-tabItem\")].pop().addEventListener(\"click\",_=>ichiba.reloadMain(),false);");
-    const newpanel = new El("div").class("IchibaPanelContainer").attr({ style: "height: 100%;" }).gen();
-    [...document.getElementsByClassName("PlayerPanelContainer-tabItem")].map((e, i) => {
+    newtab.setAttribute("onclick", "document.get(\".PlayerPanelContainer-tabItem\").pop().addEventListener(\"click\",_=>ichiba.reloadMain(),false);");
+    const newpanel = El("div").class("IchibaPanelContainer").attr({ style: "height: 100%;" }).gen();
+    document.get(".PlayerPanelContainer-tabItem").map((e, i) => {
         e.style.userSelect = "none";
         e.addEventListener("click", _ => {
             if (!e.classList.contains("current")) {
-                [...PPC_tab.getElementsByClassName("current")].map(e => e.classList.remove("current"));
+                PPC_tab.get(".current").map(e => e.classList.remove("current"));
                 e.classList.add("current");
-                if (PPC_content.getElementsByClassName("IchibaPanelContainer").length) {
-                    PPC_content.removeChild(PPC_content.getElementsByClassName("IchibaPanelContainer")[0]);
+                if (PPC_content.get(".IchibaPanelContainer").length) {
+                    PPC_content.removeChild(PPC_content.get(".IchibaPanelContainer")[0]);
                     if (PPC_content.children.length) {
                         let temp = PPC_content.removeChild(PPC_content.firstElementChild);
                         temp.style.display = "";
@@ -148,10 +155,10 @@ function gen_ichiba_tab() {
                 if (e === newtab) {
                     PPC_content.firstElementChild.style.display = "none";
                     PPC_content.appendChild(newpanel);
-                    if (!newpanel.children.length && document.getElementsByClassName("IchibaContainer").length) {
-                        const ichiba_container = document.getElementsByClassName("IchibaContainer")[0];
+                    if (!newpanel.children.length && document.get(".IchibaContainer").length) {
+                        const ichiba_container = document.get(".IchibaContainer")[0];
                         newpanel.appendChild(ichiba_container);
-                        newpanel.getElementsByClassName("Card-main")[0].style.paddingRight = "0";
+                        newpanel.get(".Card-main")[0].style.paddingRight = "0";
                         ichiba_container.style.padding = "0";
                         ichiba_container.classList.add("WatchRecommendation-inner");
                         ichiba_container.style.overflowY = "scroll";
@@ -162,7 +169,7 @@ function gen_ichiba_tab() {
             }
         }, false);
         PPC_tab_observers.push(new MutationObserver(_ => {
-            if (PPC_tab.getElementsByClassName("current").length !== 1) {
+            if (PPC_tab.get(".current").length !== 1) {
                 if (e.classList.contains("current")) e.classList.remove("current");
                 e.click();
             }
@@ -181,23 +188,32 @@ function apndExls(index, content_id, content_label) {
     });
 }
 function openShare() {
-    const share_modal = new El("div", { class: "NC-Fade NC-Modal NC-ShareModal MylistShareModal", style: "transition: opacity 200ms ease-in-out 0s; opacity: 1;" }, [
-        new El("div", { class: "NC-Modal-overlay" }, [
-            new El("div", { class: "NC-Modal-body" }, [
-                new El("div", { class: "NC-ShareModal-modal" }, [
-                    new El("div", { class: "NC-ShareModal-modalTitle" }, ["拡張マイリストの共有/読込"]),
-                    new El("div", { class: "NC-ShareModal-modalBody" }, [
-                        new El("div", { class: "NC-ShareModal-sns" }, [
-                            new El("button", { "aria-label": "twitter", class: "react-share__ShareButton NC-TwitterShareButton", style: "background-color: transparent; border: none; padding: 0px; font: inherit; color: inherit; cursor: pointer;" }, [
-                                /*new El("div").class("NC-TwitterShareButton-icon")*/
+    const share_modal = El("div", { class: "NC-Fade NC-Modal NC-ShareModal MylistShareModal", style: "transition: opacity 200ms ease-in-out 0s; opacity: 1;" }, [
+        El("div", { class: "NC-Modal-overlay" }, [
+            El("div", { class: "NC-Modal-body" }, [
+                El("div", { class: "NC-ShareModal-modal" }, [
+                    El("div", { class: "NC-ShareModal-modalTitle" }, ["拡張マイリストの共有/読込"]),
+                    El("div", { class: "NC-ShareModal-modalBody" }, [
+                        El("div", { class: "NC-ShareModal-sns" }, [
+                            El("button", { "aria-label": "twitter", class: "react-share__ShareButton NC-TwitterShareButton", style: "background-color: transparent; border: none; padding: 0px; font: inherit; color: inherit; cursor: pointer;" }, [
+                                /*El("div").class("NC-TwitterShareButton-icon")*/
                             ])
                         ]),
-                        new El("div", { class: "NC-ShareModal-form" }, [
-                            exls_svimg,
-                            new El("input").attr({ type: "file", id: "exls-ld-ipt" })
+                        El("div", { textAlign: "right" }, { class: "NC-ShareModal-form" }, [
+                            El("label", { cursor: "pointer" }, {}, [
+                                El("div", { textAlign: "left" }, {}, [
+                                    El("div", ["ファイルを選択"]).attr({ style: "display: inline-block; width: 160px; height: 20px; text-align: center; background-color: #252525; color: #fafafa;" }),
+                                    El("i", ["選択されていません"]).attr({ id: "exls-selectedFile-text" })
+                                ]),
+                                El("div", { position: "relative", width: "100%", height: "150px", backgroundColor: "#0005", textAlign: "center" }, {}, [
+                                    exls_svimg,
+                                    El("input").attr({ type: "file", id: "exls-ld-ipt", style: "position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0;", title: "ドロップしても読み込めます" })
+                                ])
+                            ]),
+                            save_link
                         ])
                     ]),
-                    new El("button").class("NC-ShareModal-modalClose")
+                    El("button").class("NC-ShareModal-modalClose")
                 ])
             ])
         ])
@@ -206,50 +222,52 @@ function openShare() {
     document.body.style = "padding-right: 17px; overflow: hidden;";
     document.body.insertAdjacentElement("beforeend", share_modal);
     const shareClose = e => (e.target.classList.contains("NC-ShareModal-modalClose") || e.target.classList.contains("NC-Modal-overlay")) && (share_modal.remove(), document.body.style = "");
-    document.getElementById("exls-ld-ipt").value = "";
-    document.getElementById("exls-ld-ipt").onchange = e => {
-        if (confirm("このリストの内容は全て削除されます\nよろしいですか？")) {
-            let r = new FileReader();
-            r.readAsDataURL(e.target.files[0]);
+    document.get("#exls-ld-ipt")[0].value = "";
+    document.get("#exls-ld-ipt")[0].onchange = e => {
+        const r = new FileReader();
+        const file = e.target.files[0];
+        file && r.readAsDataURL(file);
+        if (file && confirm("このリストの内容は全て削除されます\nよろしいですか？")) {
+            document.get("#exls-selectedFile-text")[0].innerText = e.target.files[0].name;
             is_exls_imgload = 1
             r.onload = _ => load_exls(r.result);
         }
     };
-    document.getElementsByClassName("NC-ShareModal-modalClose")[0].addEventListener("click", shareClose, false);
-    document.getElementsByClassName("NC-Modal-overlay")[0].addEventListener("click", shareClose, false);
+    document.get(".NC-ShareModal-modalClose")[0].addEventListener("click", shareClose, false);
+    document.get(".NC-Modal-overlay")[0].addEventListener("click", shareClose, false);
     return;
 }
 function openHeaderMenu() {
-    const header_menu = new El("div", { class: "WheelStopper", style: "" }, [
-        new El("div", { class: "Snap ThreePointMenu MylistHeaderMenu MylistHeaderAction-item", style: "top: 384.391px; left: 1255.5px; transform: translateX(-100%);" }, [
-            new El("button", ["拡張マイリストを編集"]).class("MylistHeaderMenu-item")
+    const header_menu = El("div", { class: "WheelStopper", style: "" }, [
+        El("div", { class: "Snap ThreePointMenu MylistHeaderMenu MylistHeaderAction-item", style: "top: 384.391px; left: 1255.5px; transform: translateX(-100%);" }, [
+            El("button", ["拡張マイリストを編集"]).class("MylistHeaderMenu-item")
         ])
     ]).gen();
     document.body.insertAdjacentElement("beforeend", header_menu);
-    header_menu.getElementsByClassName("MylistHeaderMenu-item")[0].onclick = openEditMylist;
+    header_menu.get(".MylistHeaderMenu-item")[0].onclick = openEditMylist;
     setTimeout(() => document.addEventListener("click", e => e.target.classList.contains("Snap") || (header_menu.remove())), 1);
     return;
 }
 function openEditMylist() {
     let exls_title_el;
-    const edit_modal = new El("div", { class: "Fade Modal EditMylistModal MylistEditModalContainer", style: "transition: opacity 200ms ease-in-out 0s; opacity: 1;" }, [
-        new El("div", { class: "Modal-overlay" }, [
-            new El("div", { class: "Modal-body" }, [
-                new El("article", { class: "ModalContent ModalContent_with-header ModalContent_with-footer" }, [
-                    new El("header", { class: "ModalContent-header" }, [
-                        new El("h1", ["拡張マイリスト編集"]).class("ModalContent-headerTitle"),
-                        new El("button").class("ModalContent-headerCloseButton")
+    const edit_modal = El("div", { class: "Fade Modal EditMylistModal MylistEditModalContainer", style: "transition: opacity 200ms ease-in-out 0s; opacity: 1;" }, [
+        El("div", { class: "Modal-overlay" }, [
+            El("div", { class: "Modal-body" }, [
+                El("article", { class: "ModalContent ModalContent_with-header ModalContent_with-footer" }, [
+                    El("header", { class: "ModalContent-header" }, [
+                        El("h1", ["拡張マイリスト編集"]).class("ModalContent-headerTitle"),
+                        El("button").class("ModalContent-headerCloseButton")
                     ]),
-                    new El("div", { class: "ModalContent-body" }, [
-                        new El("div", { class: "EditMylistModal-settings" }, [
-                            new El("section", { class: "TextField" }, [
-                                new El("h1", { class: "TextField-label" }, [new El("span", ["タイトル"]).class("TextField-labelText")]),
-                                new El("div", { class: "TextField-input" }, [exls_title_el = new El("input").attr({ type: "text", class: "TextField-inputForm", id: "undefined-title", name: "title", value: "" }).gen()])
+                    El("div", { class: "ModalContent-body" }, [
+                        El("div", { class: "EditMylistModal-settings" }, [
+                            El("section", { class: "TextField" }, [
+                                El("h1", { class: "TextField-label" }, [El("span", ["タイトル"]).class("TextField-labelText")]),
+                                El("div", { class: "TextField-input" }, [exls_title_el = El("input").attr({ type: "text", class: "TextField-inputForm", id: "undefined-title", name: "title", value: "" }).gen()])
                             ])
                         ])
                     ]),
-                    new El("footer", { class: "ModalContent-footer" }, [
-                        new El("button", ["保存"]).class("ModalContent-footerSubmitButton")
+                    El("footer", { class: "ModalContent-footer" }, [
+                        El("button", ["保存"]).class("ModalContent-footerSubmitButton")
                     ])
                 ])
             ])
@@ -258,10 +276,10 @@ function openEditMylist() {
     document.body.style = "padding-right: 17px; overflow: hidden;";
     document.body.insertAdjacentElement("beforeend", edit_modal);
     const editClose = e => e.target.classList.contains("ModalContent-headerCloseButton") && (edit_modal.remove(), document.body.style = "");
-    const editCloseBtn = document.getElementsByClassName("ModalContent-headerCloseButton")[0];
+    const editCloseBtn = document.get(".ModalContent-headerCloseButton")[0];
     editCloseBtn.addEventListener("click", editClose, false);
-    document.getElementsByClassName("Modal-overlay")[0].addEventListener("click", e => e.target.classList.contains("Modal-overlay") && editCloseBtn.click(), false);
-    document.getElementsByClassName("ModalContent-footerSubmitButton")[0].addEventListener("click", () => {
+    document.get(".Modal-overlay")[0].addEventListener("click", e => e.target.classList.contains("Modal-overlay") && editCloseBtn.click(), false);
+    document.get(".ModalContent-footerSubmitButton")[0].addEventListener("click", () => {
         chrome.storage.local.get(exls_default, item => {
             const exls = item.exlists;
             exls[listid].name = exls_title_el.value;
@@ -269,7 +287,7 @@ function openEditMylist() {
             chrome.runtime.sendMessage({ type: "renameMenu", id: "apndExls-" + listid, title: exls_title_el.value });
             is_exls_imgload = 0;
         });
-        document.getElementsByClassName("MylistHeader-name")[0].innerText = exls_title_el.value;
+        document.get(".MylistHeader-name")[0].innerText = exls_title_el.value;
         document.title = exls_title_el.value + " - " + document.title.split(" - ").slice(-1)[0]
         editCloseBtn.click();
     }, false);
@@ -277,24 +295,24 @@ function openEditMylist() {
     return;
 }
 const openMediaMenu = (name, id = "") => {
-    const exlist_container = document.getElementsByClassName("ExlistContainer")[0];
-    const media_obj_list_el = exlist_container.getElementsByClassName("VideoMediaObjectList")[0];
-    const media_obj_el = media_obj_list_el.getElementsByClassName("ExMedia" + name)[0];
-    const media_menu = new El("div", { class: "WheelStopper", style: "" }, [
-        new El("div", { class: "Snap ThreePointMenu VideoMenu MylistPageVideoMenu MylistItem-action", style: `top: ${window.pageYOffset + media_obj_el.getElementsByClassName("ThreePointMenu-button")[0].getBoundingClientRect().bottom}px; left: 1255.5px; transform: translateX(-100%);` }, [
-            new El("button", ["リストから削除"]).class("VideoMenuButtonItem MylistPageVideoMenu-item MenuItem-Remove"),
-            ...(url_to_id_sv(id).others.ad ? [new El("a", ["ニコニ広告する"]).attr({ class: "VideoMenuLinkItem MenuItem-Nicoad", onclick: `window.open("https://nicoad.nicovideo.jp/${url_to_id_sv(id).others.ad}/publish/${url_to_id_sv(id).id}", null, "top=0,left=0,width=428,height=600")` })] : [])
+    const exlist_container = document.get(".ExlistContainer")[0];
+    const media_obj_list_el = exlist_container.get(".VideoMediaObjectList")[0];
+    const media_obj_el = media_obj_list_el.get(".ExMedia" + name)[0];
+    const media_menu = El("div", { class: "WheelStopper", style: "" }, [
+        El("div", { class: "Snap ThreePointMenu VideoMenu MylistPageVideoMenu MylistItem-action", style: `top: ${window.pageYOffset + media_obj_el.get(".ThreePointMenu-button")[0].getBoundingClientRect().bottom}px; left: 1255.5px; transform: translateX(-100%);` }, [
+            El("button", ["リストから削除"]).class("VideoMenuButtonItem MylistPageVideoMenu-item MenuItem-Remove"),
+            ...(url_to_id_sv(id).others.ad ? [El("a", ["ニコニ広告する"]).attr({ class: "VideoMenuLinkItem MenuItem-Nicoad", onclick: `window.open("https://nicoad.nicovideo.jp/${url_to_id_sv(id).others.ad}/publish/${url_to_id_sv(id).id}", null, "top=0,left=0,width=428,height=600")` })] : [])
         ])
     ]).gen();
     document.body.insertAdjacentElement("beforeend", media_menu);
-    media_menu.getElementsByClassName("MenuItem-Remove")[0].onclick = () => confirm(`${media_obj_el.getElementsByClassName("NC-MediaObjectTitle")[0].innerText}をリストから削除します\nよろしいですか？`) && ext_some(name);
+    media_menu.get(".MenuItem-Remove")[0].onclick = () => confirm(`${media_obj_el.get(".NC-MediaObjectTitle")[0].innerText}をリストから削除します\nよろしいですか？`) && ext_some(name);
     setTimeout(() => document.addEventListener("click", e => e.target.classList.contains("Snap") || (media_menu.remove())), 1);
     return;
 };
 const exlistUpDown = (name, mode) => {
-    const exlist_container = document.getElementsByClassName("ExlistContainer")[0];
-    const media_obj_list_el = exlist_container.getElementsByClassName("VideoMediaObjectList")[0];
-    const media_obj_el = media_obj_list_el.getElementsByClassName("ExMedia" + name)[0];
+    const exlist_container = document.get(".ExlistContainer")[0];
+    const media_obj_list_el = exlist_container.get(".VideoMediaObjectList")[0];
+    const media_obj_el = media_obj_list_el.get(".ExMedia" + name)[0];
     const index = prevCount(media_obj_el);
     const newindex = index + (mode - 0.5) * -2;
     if (mode ? media_obj_el.previousElementSibling : media_obj_el.nextElementSibling) {
@@ -306,137 +324,146 @@ const exlistUpDown = (name, mode) => {
             exlists[listid].list.splice(newindex, 0, ex);
             chrome.storage.local.set({ exlists: exlists });
             is_exls_imgload = 0;
-            const moe_marginTop = parseInt(document.defaultView.getComputedStyle(media_obj_el).marginTop.match(/\d+/g)[0], 10);
-            scrollBy(0, (media_obj_el.getBoundingClientRect().height + moe_marginTop) * (mode - 0.5) * -2);
+            const size_el = media_obj_el.nextElementSibling || media_obj_el;
+            const moe_marginTop = parseInt(document.defaultView.getComputedStyle(size_el).marginTop.match(/\d+/g)[0], 10);
+            scrollBy(0, (size_el.getBoundingClientRect().height + moe_marginTop) * (mode - 0.5) * -2);
         });
     }
 }
 const saveMemo = name => {
-    const media_obj_list_el = document.getElementsByClassName("ExlistContainer")[0].getElementsByClassName("VideoMediaObjectList")[0];
-    const media_obj_el = media_obj_list_el.getElementsByClassName("ExMedia" + name)[0];
+    const media_obj_list_el = document.get(".ExlistContainer")[0].get(".VideoMediaObjectList")[0];
+    const media_obj_el = media_obj_list_el.get(".ExMedia" + name)[0];
     const listid = parseInt((document.URL.match(/ex\d+/g) || ["ex0"])[0].slice(2), 10);
     const index = prevCount(media_obj_el);
     chrome.storage.local.get(exls_default, item => {
         const exlists = item.exlists;
-        exlists[listid].list[index].label = (media_obj_el.getElementsByClassName("TextField-inputForm")[0] || { value: media_obj_el.getElementsByClassName("MylistItemMemo-preview")[0].innerText }).value;
+        exlists[listid].list[index].label = (media_obj_el.get(".TextField-inputForm")[0] || { value: media_obj_el.get(".MylistItemMemo-preview")[0].innerText }).value;
         chrome.storage.local.set({ exlists: exlists });
         is_exls_imgload = 0;
     });
 }
-const triangle = `data:image/svg+xml;charset=utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Cpolygon%20points%3D%220%201%2C%2024%201%2C%2012%2022%22%20stroke-width%3D%221%22%20stroke%3D%22none%22%20fill%3D%22%23bbb%22%20%2F%3E%3C%2Fsvg%3E`;
-const gen_media_temp = (index, id, label) => new El("div", { class: "CheckboxVideoMediaObject MylistItem MylistItemList-item CheckboxVideoMediaObject_withFooter ExMedia" + index + id }, [
-    new El("div", { class: "CheckboxVideoMediaObject-checkboxArea" }, [
-        new El("div", { class: "Checkbox CheckboxVideoMediaObject-checkbox" }, [
-            new El("input").attr({ class: "Checkbox-input", type: "checkbox", id: index + id, name: index + id, "data-checkboxes-item-id": id }),
-            new El("label").attr({ class: "Checkbox-check", for: index + id })
+const triangle = `data:image/svg+xml;charset=utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Cpolygon%20points%3D%224%208%2C%2020%208%2C%2012%2021%22%20stroke-width%3D%221%22%20stroke%3D%22none%22%20fill%3D%22%23bbb%22%20%2F%3E%3C%2Fsvg%3E`;
+const gen_media_temp = (name, id, label) => El("div", { class: "CheckboxVideoMediaObject MylistItem MylistItemList-item CheckboxVideoMediaObject_withFooter ExMedia" + name }, [
+    El("div", { class: "CheckboxVideoMediaObject-checkboxArea" }, [
+        El("div", { class: "Checkbox CheckboxVideoMediaObject-checkbox" }, [
+            El("input").attr({ class: "Checkbox-input", type: "checkbox", id: name, name: name, "data-checkboxes-item-id": id }),
+            El("label").attr({ class: "Checkbox-check", for: name })
         ])
     ]),
-    new El("div", { "data-video-thumbnail-comment-hover": true, class: "NC-MediaObject NC-VideoMediaObject MylistItem MylistItemList-item NC-MediaObject_withAction NC-MediaObject_withFooter" }, [
-        new El("div", { class: "NC-MediaObject-main" }, [
-            new El("a", { href: id_to_url(id), class: "NC-Link NC-MediaObject-contents", rel: "noopener" }, [
-                new El("div", { class: "NC-MediaObject-media" }, [
-                    new El("div", { class: "NC-VideoMediaObject-thumbnail" }, [
-                        new El("div", { class: "NC-Thumbnail NC-VideoThumbnail NC-VideoMediaObject-thumbnail NC-Thumbnail_sizeCover" }, [
-                            new El("div").attr({ class: "NC-Thumbnail-image", role: "img", "aria-label": "" }),/*サムネイル*/
-                            ...(url_to_id_sv(id).sv === "douga" ? [new El("div").class("NC-VideoLength")] : [])
+    El("div", { "data-video-thumbnail-comment-hover": true, class: "NC-MediaObject NC-VideoMediaObject MylistItem MylistItemList-item NC-MediaObject_withAction NC-MediaObject_withFooter" }, [
+        El("div", { class: "NC-MediaObject-main" }, [
+            El("a", { href: id_to_url(id), class: "NC-Link NC-MediaObject-contents", rel: "noopener" }, [
+                El("div", { class: "NC-MediaObject-media" }, [
+                    El("div", { class: "NC-VideoMediaObject-thumbnail" }, [
+                        El("div", { class: "NC-Thumbnail NC-VideoThumbnail NC-VideoMediaObject-thumbnail NC-Thumbnail_sizeCover" }, [
+                            El("div").attr({ class: "NC-Thumbnail-image", role: "img", "aria-label": "" }),/*サムネイル*/
+                            ...(url_to_id_sv(id).sv === "douga" ? [El("div").class("NC-VideoLength")] : [])
                         ])
                     ])
                 ]),
-                new El("div", { class: "NC-MediaObject-body" }, [
-                    new El("div", { class: "NC-MediaObject-bodyTitle" }, [
-                        new El("h2", [label]).class("NC-MediaObjectTitle NC-VideoMediaObject-title NC-MediaObjectTitle_fixed2Line")/*タイトル*/
+                El("div", { class: "NC-MediaObject-body", style: "position: relative;" }, [
+                    El("div", { class: "NC-MediaObject-bodyTitle" }, [
+                        El("h2", [label]).class("NC-MediaObjectTitle NC-VideoMediaObject-title NC-MediaObjectTitle_fixed2Line")/*タイトル*/
                     ]),
-                    new El("div", { class: "NC-MediaObject-bodySecondary" }, [
-                        new El("div").class("NC-VideoMediaObject-description"),/*動画説明*/
-                        new El("div", { class: "NC-VideoMediaObject-meta" }, [
-                            new El("div", { class: "NC-VideoMediaObject-metaAdditional" }, [
-                                new El("span", { class: "NC-VideoRegisteredAtText" }, [
-                                    new El("span").class("NC-VideoRegisteredAtText-text")/*投稿日時*/
+                    El("div", { class: "NC-MediaObject-bodySecondary" }, [
+                        El("div").class("NC-VideoMediaObject-description"),/*動画説明*/
+                        El("div", { class: "NC-VideoMediaObject-meta" }, [
+                            El("div", { class: "NC-VideoMediaObject-metaAdditional" }, [
+                                El("span", { class: "NC-VideoRegisteredAtText" }, [
+                                    El("span").class("NC-VideoRegisteredAtText-text")/*投稿日時*/
                                 ])
                             ]),
-                            new El("div", { class: "NC-VideoMediaObject-metaCount" }, ["douga", "seiga"].includes(url_to_id_sv(id).sv) ? [/*各種カウンタ*/
-                                new El("div", { class: "NC-VideoMetaCount NC-VideoMetaCount_view" }, ["0"]),
-                                new El("div", { class: "NC-VideoMetaCount NC-VideoMetaCount_comment" }, ["0"]),
-                                /*new El("div", { class: "NC-VideoMetaCount NC-VideoMetaCount_like" }, ["0"]),*/
-                                new El("div", { class: "NC-VideoMetaCount NC-VideoMetaCount_mylist" }, ["0"])
+                            El("div", { class: "NC-VideoMediaObject-metaCount" }, ["douga", "seiga"].includes(url_to_id_sv(id).sv) ? [/*各種カウンタ*/
+                                El("div", { class: "NC-VideoMetaCount NC-VideoMetaCount_view" }, ["0"]),
+                                El("div", { class: "NC-VideoMetaCount NC-VideoMetaCount_comment" }, ["0"]),
+                                /*El("div", { class: "NC-VideoMetaCount NC-VideoMetaCount_like" }, ["0"]),*/
+                                El("div", { class: "NC-VideoMetaCount NC-VideoMetaCount_mylist" }, ["0"])
                             ] : [])
                         ])
                     ])
                 ])
             ]),
-            new El("div", { class: "NC-MediaObject-action" }, [
-                new El("div").class("ThreePointMenu-button ThreePointMenu-button_gray"),
-                new El("div").attr({ class: "ExListUp", style: `width: 16px; height: 16px; margin: 4px auto; transform: rotate(180deg); background-size: contain; background-image: url("${triangle}"); cursor: pointer;` }),
-                new El("div").attr({ class: "ExListDown", style: `width: 16px; height: 16px; margin: 4px auto; background-size: contain; background-image: url("${triangle}"); cursor: pointer;` })
+            El("div", { class: "NC-MediaObject-action" }, [
+                El("div").class("ThreePointMenu-button ThreePointMenu-button_gray"),
+                El("div").attr({ class: "ExListUp", style: `width: 24px; height: 24px; margin: 2px 0 0; transform: rotate(180deg); border-radius: 50% 50%; background-size: contain; background-image: url("${triangle}"); cursor: pointer;` }),
+                El("div").attr({ class: "ExListDown", style: `width: 24px; height: 24px; margin: 0; border-radius: 50% 50%; background-size: contain; background-image: url("${triangle}"); cursor: pointer;` })
             ])
         ]),
-        new El("footer", [
-            new El("div", { class: "MylistItemAddition MylistItem-addition" }, [
-                new El("div", { class: "MylistItemAddition-row" }, [
-                    new El("div", { class: "MylistItemAddition-addedAt" }, ["@" + url_to_id_sv(id).others.text]),/*サービス表示*/
-                    new El("button").class("MylistItemAddition-edit")
+        El("footer", [
+            El("div", { class: "MylistItemAddition MylistItem-addition" }, [
+                El("div", { class: "MylistItemAddition-row" }, [
+                    El("div", { class: "MylistItemAddition-addedAt" }, ["@" + url_to_id_sv(id).others.text]),/*サービス表示*/
+                    El("button").class("MylistItemAddition-edit")
                 ]),
-                new El("span", [label]).class("AutoLinkText EditableField MylistItemMemo MylistItemAddition-memo MylistItemMemo-preview")
+                El("span", [label]).class("AutoLinkText EditableField MylistItemMemo MylistItemAddition-memo MylistItemMemo-preview")
             ])
         ])
     ])
 ]).gen();
 const gen_media_objs = () => {
-    const exlist_container = document.getElementsByClassName("ExlistContainer")[0];
-    const media_obj_list_el = exlist_container.getElementsByClassName("TempVideoMediaObjectList")[0] || exlist_container.getElementsByClassName("VideoMediaObjectList")[0];
+    const exlist_container = document.get(".ExlistContainer")[0];
+    const media_obj_list_el = exlist_container.get(".TempVideoMediaObjectList")[0] || exlist_container.get(".VideoMediaObjectList")[0];
     [...media_obj_list_el.children].map(e => e.remove());
     const listid = parseInt((document.URL.match(/ex\d+/g) || ["ex0"])[0].slice(2), 10);
     chrome.storage.local.get(exls_default, item => {
         if (item.exlists && item.exlists.length > listid) {
             const exlists = item.exlists;
             const exlist = exlists[listid];
-            document.title = (exlist_container.getElementsByClassName("MylistHeader-name")[0].innerText = exlist.name) + " - nicoExp";
-            exlist_container.getElementsByClassName("MylistHeader-metaItemValue")[0].innerText = exlist.list.length;
+            document.title = (exlist_container.get(".MylistHeader-name")[0].innerText = exlist.name) + " - nicoExp";
+            exlist_container.get(".MylistHeader-metaItemValue")[0].innerText = exlist.list.length;
             exlist.list.map((ex, i) => {
-                const media_template = gen_media_temp(i, ex.id, ex.label);
+                const media_name = i + ex.id.replace(/[^0-9A-Za-z_\-]+/g, "");
+                const media_template = gen_media_temp(media_name, ex.id, ex.label);
                 media_obj_list_el.appendChild(media_template);
-                media_template.getElementsByClassName("NC-Thumbnail-image")[0].style.background = `center center / ${["seiga", "ichiba", "user"].includes(url_to_id_sv(ex.id).sv) ? "contain" : "cover"} no-repeat #fff`;
+                media_template.get(".NC-Thumbnail-image")[0].style.background = `center center / ${["seiga", "ichiba", "user", "commons"].includes(url_to_id_sv(ex.id).sv) ? "contain" : "cover"} no-repeat #fff`;
                 if (["douga", "seiga"].includes(url_to_id_sv(ex.id).sv)) {
-                    chrome.runtime.sendMessage({ type: "get", mode: url_to_id_sv(ex.id).sv, media_id: ex.id, obj_name: i + ex.id, trial: 0 });
+                    chrome.runtime.sendMessage({ type: "get", mode: url_to_id_sv(ex.id).sv, media_id: ex.id, obj_name: media_name, trial: 0 });
                 } else {
-                    media_template.getElementsByClassName("NC-Thumbnail-image")[0].style.backgroundImage = id_to_img(ex.id) && `${[id_to_img(ex.id)].flat().map(i => `url("${i}")`).join(',')}`;
+                    media_template.get(".NC-Thumbnail-image")[0].style.backgroundImage = id_to_img(ex.id) && `${[id_to_img(url_to_id_sv(ex.id).id[0])].flat().map(i => `url("${i}")`).join(',')}`;
                 }
-                const item_addition_btn = media_template.getElementsByClassName("MylistItemAddition-edit")[0];
+                if (url_to_id_sv(ex.id).sv === "commons") {
+                    const audio_el = El("audio").attr({ src: "https://commons.nicovideo.jp/api/preview/get?cid=" + ex.id.slice(2), controls: true, preload: "audio", style: "position: absolute; bottom: 0; width: 300px; height: 40px;" }).gen();
+                    audio_el.onerror = function () { this.controls = false; };
+                    (el => el && (el.parentNode.appendChild(audio_el), el.remove()))(media_template.get(".NC-MediaObject-bodySecondary")[0]);
+                }
+                const item_addition_btn = media_template.get(".MylistItemAddition-edit")[0];
                 item_addition_btn.onclick = () => {
                     item_addition_btn.classList.toggle("MylistItemAddkition-edit_is-editing");
                     item_addition_btn.style.backgroundImage = (item_addition_btn.style.backgroundImage || document.defaultView.getComputedStyle(item_addition_btn).backgroundImage);
                     if (item_addition_btn.classList.contains("MylistItemAddkition-edit_is-editing")) {
                         item_addition_btn.style.backgroundImage = item_addition_btn.style.backgroundImage.replace("2NjY2NjYy", "zAwODBmZi");//メモ編集ボタンを青く
-                        media_template.getElementsByClassName("MylistItemAddition")[0].appendChild(new El("section", { class: "TextField EditableField MylistItemMemo MylistItemAddition-memo MylistItemMemo-edit" }, [
-                            new El("div", { class: "TextField-input" }, [
-                                new El("textarea", [media_template.getElementsByClassName("MylistItemMemo-preview")[0].innerText]).attr({ type: "textarea", class: "TextField-inputForm", name: "memo", style: "height: 80px;" })
+                        media_template.get(".MylistItemAddition")[0].appendChild(El("section", { class: "TextField EditableField MylistItemMemo MylistItemAddition-memo MylistItemMemo-edit" }, [
+                            El("div", { class: "TextField-input" }, [
+                                El("textarea", [media_template.get(".MylistItemMemo-preview")[0].innerText]).attr({ type: "textarea", class: "TextField-inputForm", name: "memo", style: "height: 80px;" })
                             ]),
-                            new El("div", { class: "TextField-footer" }, [
-                                new El("button", ["保存"]).class("TextField-footerButton TextField-saveButton"),
-                                new El("button", ["キャンセル"]).class("TextField-footerButton TextField-cancelButton")
+                            El("div", { class: "TextField-footer" }, [
+                                El("button", ["保存"]).class("TextField-footerButton TextField-saveButton"),
+                                El("button", ["キャンセル"]).class("TextField-footerButton TextField-cancelButton")
                             ])
                         ]).gen());
-                        [...media_template.getElementsByClassName("TextField-footerButton")].map(e =>
+                        media_template.get(".TextField-footerButton").map(e =>
                             e.onclick = () => {
                                 if (e.classList.contains("TextField-saveButton")) {
-                                    saveMemo(i + ex.id, i);
+                                    saveMemo(media_name, i);
                                 }
                                 item_addition_btn.click();
                             }
                         );
                     } else {
                         item_addition_btn.style.backgroundImage = item_addition_btn.style.backgroundImage.replace("zAwODBmZi", "2NjY2NjYy");//メモ編集ボタンを通常に
-                        media_template.getElementsByClassName("MylistItemAddition")[0].appendChild(new El("span", { class: "AutoLinkText EditableField MylistItemMemo MylistItemAddition-memo MylistItemMemo-preview" }, [media_template.getElementsByClassName("TextField-inputForm")[0].value]).gen());
+                        media_template.get(".MylistItemAddition")[0].appendChild(El("span", { class: "AutoLinkText EditableField MylistItemMemo MylistItemAddition-memo MylistItemMemo-preview" }, [media_template.get(".TextField-inputForm")[0].value]).gen());
                     }
-                    media_template.getElementsByClassName("MylistItemMemo")[0].remove();
+                    media_template.get(".MylistItemMemo")[0].remove();
                 };
-                media_template.getElementsByClassName("ThreePointMenu-button")[0].onclick = () => { openMediaMenu(i + ex.id, ex.id) };
-                media_template.getElementsByClassName("ExListUp")[0].onclick = () => { exlistUpDown(i + ex.id, true); };
-                media_template.getElementsByClassName("ExListDown")[0].onclick = () => { exlistUpDown(i + ex.id, false) };
-                const checkbox = media_template.getElementsByClassName("Checkbox-input")[0];
+                media_template.get(".ThreePointMenu-button")[0].onclick = () => { openMediaMenu(media_name, ex.id) };
+                media_template.get(".ExListUp")[0].onclick = () => { exlistUpDown(media_name, true); };
+                media_template.get(".ExListUp")[0].onmouseover = media_template.get(".ExListUp")[0].onmouseout = function (e) { this.style.backgroundColor = e.type === "mouseover" ? "#eee" : "#fff0"; };
+                media_template.get(".ExListDown")[0].onclick = () => { exlistUpDown(media_name, false) };
+                media_template.get(".ExListDown")[0].onmouseover = media_template.get(".ExListDown")[0].onmouseout = function (e) { this.style.backgroundColor = e.type === "mouseover" ? "#eee" : "#fff0"; };
+                const checkbox = media_template.get(".Checkbox-input")[0];
                 checkbox.onclick = () => {
-                    const { true: checked, false: unchecked } = [...exlist_container.getElementsByClassName("VideoMediaObjectList")[0].getElementsByClassName("Checkbox-input")].reduce((acc, e) => ({ [e.checked]: [...acc[e.checked], e.id], [!e.checked]: acc[!e.checked] }), { true: [], false: [] });
-                    document.getElementById("VideoListEditMenu-isAllChecked").checked |= checkbox.checked;
+                    const { true: checked, false: unchecked } = exlist_container.get(".VideoMediaObjectList")[0].get(".Checkbox-input").reduce((acc, e) => ({ [e.checked]: [...acc[e.checked], e.id], [!e.checked]: acc[!e.checked] }), { true: [], false: [] });
+                    document.get("#VideoListEditMenu-isAllChecked")[0].checked |= checkbox.checked;
                     checkCheck(checked);
                 };
             });
@@ -445,35 +472,39 @@ const gen_media_objs = () => {
     });
 }
 const checkCheck = checked => {
+    const vlem = document.get(".VideoListEditMenu")[0];
     if (checked.length) {
-        document.getElementById("VideoListEditMenu-isAllChecked").checked = true;
-        document.getElementsByClassName("VideoListEditMenu")[0].getElementsByClassName("Checkbox-label")[0].innerText = checked.length + "件選択中";
-        document.getElementsByClassName("VideoListEditMenu")[0].getElementsByClassName("VideoListEditMenuButton")[0].className = "VideoListEditMenuButton VideoListEditMenu-delete";
+        document.get("#VideoListEditMenu-isAllChecked")[0].checked = true;
+        vlem.get(".Checkbox-label")[0].innerText = checked.length + "件選択中";
+        vlem.get(".VideoListEditMenu-delete")[0].classList.remove("VideoListEditMenuButton_disable");
+        vlem.get(".MylistVideoListEditMenu-register")[0].classList.remove("VideoListEditMenuButton_disable");
     } else {
-        document.getElementById("VideoListEditMenu-isAllChecked").checked = false;
-        document.getElementsByClassName("VideoListEditMenu")[0].getElementsByClassName("Checkbox-label")[0].innerText = "すべて選択";
-        document.getElementsByClassName("VideoListEditMenu")[0].getElementsByClassName("VideoListEditMenuButton")[0].className = "VideoListEditMenuButton VideoListEditMenu-delete VideoListEditMenuButton_disable";
+        document.get("#VideoListEditMenu-isAllChecked")[0].checked = false;
+        vlem.get(".Checkbox-label")[0].innerText = "すべて選択";
+        vlem.get(".VideoListEditMenu-delete")[0].classList.add("VideoListEditMenuButton_disable");
+        vlem.get(".MylistVideoListEditMenu-register")[0].classList.add("VideoListEditMenuButton_disable");
     }
 }
 const ext_some = names => {
-    const media_obj_list_el = document.getElementsByClassName("ExlistContainer")[0].getElementsByClassName("VideoMediaObjectList")[0];
+    const media_obj_list_el = document.get(".ExlistContainer")[0].get(".VideoMediaObjectList")[0];
     chrome.storage.local.get(exls_default, item => {
         const exlists = item.exlists;
         [names].flat().map(name => {
-            const media_obj_el = media_obj_list_el.getElementsByClassName("ExMedia" + name)[0];
+            const media_obj_el = media_obj_list_el.get(".ExMedia" + name)[0];
             const index = prevCount(media_obj_el);
             media_obj_el.remove();
             exlists[listid].list.splice(index, 1);
         });
         chrome.storage.local.set({ exlists: exlists });
         is_exls_imgload = 0;
-        document.getElementsByClassName("MylistHeader-metaItemValue")[0].innerText = exlists[listid].list.length;
+        document.get(".MylistHeader-metaItemValue")[0].innerText = exlists[listid].list.length;
     });
 };
 /*list_image------*/
-const exls_canvas = new El("canvas").attr({ id: "exls-canvas" }).gen();
+const exls_canvas = El("canvas").attr({ id: "exls-canvas" }).gen();
 const exls_ctx = exls_canvas.getContext("2d");
-const exls_svimg = new El("img").attr({ id: "exls-save-img", style: "width: 100%; height: 150px;" }).gen();
+const exls_svimg = El("img").attr({ id: "exls-save-img", style: "width: 100%; height: 100%;", alt: "読み込み中..." }).gen();
+const save_link = El("a", ["保存する"]).attr({ href: "", id: "exls-save-btn", download: "exlist", style: "text-decoration: underline;" }).gen();
 let is_exls_imgload = 0;
 const split_chars = ["e01a", "e01b", "e020"].map(c => String.fromCharCode(parseInt(c, 16)));
 const str_to_image = str => (code => (s => {
@@ -486,6 +517,7 @@ const str_to_image = str => (code => (s => {
     [...acc, ...[Math.floor(parseInt(v, 16) / 4), parseInt(v, 16) % 4].map(i => ("0" + (i * 85).toString(16)).slice(-2))], []).join('')
 ))(str.split('').map(s => ("0000" + s.charCodeAt().toString(16)).slice(-4)).join(''));
 const reload_canvas = () => {
+    exls_svimg.src = "";
     const listid = parseInt((document.URL.match(/ex\d+/g) || ["ex0"])[0].slice(2), 10);
     chrome.storage.local.get(exls_default, item => {
         const exlists = item.exlists;
@@ -506,7 +538,8 @@ const reload_canvas = () => {
         [...pix].map((_, i) => i % 4 != 3 ? parseInt("00" + img.substr((i - Math.floor(i / 4)) * 2, 2), 16) + 0 : 255)
         exls_ctx.putImageData(imgd, 0, 0);
 
-        exls_svimg.src = exls_canvas.toDataURL();
+        save_link.href = exls_svimg.src = exls_canvas.toDataURL();
+        save_link.download = exlists[listid].name;
         is_exls_imgload = 1;
     });
 };
@@ -559,7 +592,7 @@ const load_exls = url => {
 };
 /*------list_image*/
 
-chrome.runtime.onMessage.addListener(m => {
+chrome.runtime.onMessage.addListener((m, _, sendRes) => {
     if (m.type === "tag_link") {
         tag_link = m.tag_link;
         ext_tag_link();
@@ -567,55 +600,54 @@ chrome.runtime.onMessage.addListener(m => {
     } else if (m.type === "ichiba_tab") {
         chrome.storage.local.get({ ichiba_tab: true }, item => {
             if (item.ichiba_tab) {
-                if ([...document.getElementsByClassName("PlayerPanelContainer-tabItem")].length === 2) {
+                if (document.get(".PlayerPanelContainer-tabItem").length === 2) {
                     gen_ichiba_tab();
                 }
             } else {
-                if ([...document.getElementsByClassName("PlayerPanelContainer-tabItem")].length !== 2) {
-                    let newtab = [...document.getElementsByClassName("PlayerPanelContainer-tabItem")].pop();
+                if (document.get(".PlayerPanelContainer-tabItem").length !== 2) {
+                    let newtab = document.get(".PlayerPanelContainer-tabItem").pop();
                     newtab.click();
-                    if (document.getElementsByClassName("PlayerPanelContainer-content")[0].getElementsByClassName("IchibaContainer").length) {
-                        let ichiba_container = document.getElementsByClassName("IchibaContainer")[0];
-                        document.getElementsByClassName("BottomMainContainer")[0].children[0].appendChild(ichiba_container);
+                    if (document.get(".PlayerPanelContainer-content")[0].get(".IchibaContainer").length) {
+                        let ichiba_container = document.get(".IchibaContainer")[0];
+                        document.get(".BottomMainContainer")[0].children[0].appendChild(ichiba_container);
                         ichiba_container.style = "";
                         ichiba_container.classList.add("Card");
                         ichiba_container.classList.remove("WatchRecommendation-inner");
-                        ichiba_container.getElementsByClassName("Card-main")[0].style = "";
+                        ichiba_container.get(".Card-main")[0].style = "";
                     }
-                    if (document.getElementsByClassName("PlayerPanelContainer-tabItem").length > 2) {
-                        document.getElementsByClassName("PlayerPanelContainer-tab")[0].removeChild(newtab).removeEventListener("click");
+                    if (document.get(".PlayerPanelContainer-tabItem").length > 2) {
+                        document.get(".PlayerPanelContainer-tab")[0].removeChild(newtab).removeEventListener("click");
                     }
-                    document.getElementsByClassName("PlayerPanelContainer-content")[0].removeChild(document.getElementsByClassName("IchibaPanelContainer")[0]);
+                    document.get(".PlayerPanelContainer-content")[0].removeChild(document.get(".IchibaPanelContainer")[0]);
                 }
             }
         });
     } else if (m.type === "quote_list") {
-        if (document.getElementsByClassName("Series").length) {
+        if (document.get(".Series").length) {
             chrome.storage.local.set({
                 qtlist: {
                     name: document.title.match(/((?<=^「).*(?=（全\d+件）」))/g)[0],
-                    list: [...document.getElementsByClassName('NC-Link')].reduce((acc, val) =>
-                        [...acc, { id: val.href.split("/").pop(), label: val.getElementsByTagName("h2")[0].innerText }]
+                    list: document.get(".NC-Link").reduce((acc, val) =>
+                        [...acc, { id: val.href.split("/").pop(), label: val.get("h2")[0].innerText }]
                         , []
                     )
                 }
             });
-        } else if (document.URL.match(/^https?:\/\/www.nicovideo.jp\/(my|user\/\d+)\/mylist\/\d+/) && !document.getElementsByClassName("ErrorState-title").length) {
+        } else if (document.URL.match(/^https?:\/\/www.nicovideo.jp\/(my|user\/\d+)\/mylist\/\d+/) && !document.get(".ErrorState-title").length) {
             chrome.storage.local.set({
                 qtlist: {
-                    name: (el => el ? el.innerText : "")(document.getElementsByClassName("MylistHeader-name")[0]),
-                    list: [...document.getElementsByClassName('NC-MediaObject-contents')].map(l => l.href.split("/").pop()).reduce((acc, val, idx) =>
-                        [...acc, { id: val, label: [...document.getElementsByClassName('NC-MediaObjectTitle')].map(l => l.innerText)[idx] }]
+                    name: (el => el ? el.innerText : "")(document.get(".MylistHeader-name")[0]),
+                    list: document.get(".NC-MediaObject-contents").map(l => l.href.split("/").pop()).reduce((acc, val, idx) =>
+                        [...acc, { id: val, label: document.get(".NC-MediaObjectTitle").map(l => l.innerText)[idx] }]
                         , [])
                 }
             });
-        } else if (document.URL.match(/^https?:\/\/www.nicovideo.jp\/(my|user\/\d+)\/video/)) {
-            if (!document.getElementsByClassName('NC-MediaObject-contents').length) return;
+        } else if (document.URL.match(/^https?:\/\/www.nicovideo.jp\/(my|user\/\d+)\/video/) && !document.get(".NC-MediaObject-contents").length) {
             chrome.storage.local.set({
                 qtlist: {
-                    name: (el => el ? el.innerText : "")(document.getElementsByClassName("UserDetailsHeader-nickname")[0]),
-                    list: [...document.getElementsByClassName('NC-MediaObject-contents')].map(l => l.href.split("/").pop()).reduce((acc, val, idx) =>
-                        [...acc, { id: val, label: [...document.getElementsByClassName('NC-MediaObjectTitle')].map(l => l.innerText)[idx] }]
+                    name: (el => el ? el.innerText : "")(document.get(".UserDetailsHeader-nickname")[0]),
+                    list: document.get(".NC-MediaObject-contents").map(l => l.href.split("/").pop()).reduce((acc, val, idx) =>
+                        [...acc, { id: val, label: document.get(".NC-MediaObjectTitle").map(l => l.innerText)[idx] }]
                         , []
                     )
                 }
@@ -623,8 +655,8 @@ chrome.runtime.onMessage.addListener(m => {
         } else if (document.URL.match(/^https?:\/\/seiga.nicovideo.jp\/(my\/)?clip/)) {
             chrome.storage.local.set({
                 qtlist: {
-                    name: (el => el[0] ? el[0].firstElementChild.innerText : el[1] ? el[1].firstElementChild.innerText : "")([document.getElementsByClassName("title_text")[0], document.getElementsByClassName("ttl_text")[0]]),
-                    list: [...document.getElementsByClassName('text_ttl')].reduce((acc, val) =>
+                    name: (el => el[0] ? el[0].firstElementChild.innerText : el[1] ? el[1].firstElementChild.innerText : "")([document.get(".title_text")[0], document.get(".ttl_text")[0]]),
+                    list: document.get(".text_ttl").reduce((acc, val) =>
                         [...acc, { id: val.firstElementChild.href.split("/").pop(), label: val.firstElementChild.innerText }]
                         , []
                     )
@@ -632,50 +664,51 @@ chrome.runtime.onMessage.addListener(m => {
             });
         }
     } else if (m.type === "res") {
-        if (m.mode === "douga") {
-            if (m.status === "success") {
-                const media_obj_el = (document.getElementsByClassName("ExMedia" + m.obj_name) || [])[0];
-                if (!media_obj_el) return;
-                media_obj_el.getElementsByClassName("NC-MediaObjectTitle")[0].innerText = m.title;
-                const thumb = media_obj_el.getElementsByClassName("NC-Thumbnail-image")[0];
-                thumb.style.backgroundImage = m.thumbnail && `url("${m.thumbnail}")`;
-                media_obj_el.getElementsByClassName("NC-VideoLength")[0].innerText = m.length;
-                media_obj_el.getElementsByClassName("NC-VideoMediaObject-description")[0].innerText = m.description;
-                media_obj_el.getElementsByClassName("NC-VideoRegisteredAtText-text")[0].innerText = m.firetri.replace(/T/g, " ").replace(/-/g, "/").replace(/\+.+/g, "");
-                media_obj_el.getElementsByClassName("NC-VideoMetaCount_view")[0].innerText = parseInt(m.counters.view, 10).toLocaleString();
-                media_obj_el.getElementsByClassName("NC-VideoMetaCount_comment")[0].innerText = parseInt(m.counters.comment, 10).toLocaleString();
-                media_obj_el.getElementsByClassName("NC-VideoMetaCount_mylist")[0].innerText = parseInt(m.counters.mylist, 10).toLocaleString();
-            }
-        } else if (m.mode === "seiga") {
-            if (m.status === "success") {
-                const media_obj_el = (document.getElementsByClassName("ExMedia" + m.obj_name) || [])[0];
-                if (!media_obj_el) return;
-                media_obj_el.getElementsByClassName("NC-MediaObjectTitle")[0].innerText = m.title;
-                const thumb = media_obj_el.getElementsByClassName("NC-Thumbnail-image")[0];
-                thumb.style.backgroundImage = m.thumbnail && `url("${m.thumbnail}")`;
-                media_obj_el.getElementsByClassName("NC-VideoMediaObject-description")[0].innerText = m.description;
-                media_obj_el.getElementsByClassName("NC-VideoRegisteredAtText-text")[0].innerText = m.created.replace(/-/g, "/");
-                media_obj_el.getElementsByClassName("NC-VideoMetaCount_view")[0].innerText = parseInt(m.counters.view, 10).toLocaleString();
-                media_obj_el.getElementsByClassName("NC-VideoMetaCount_comment")[0].innerText = parseInt(m.counters.comment, 10).toLocaleString();
-                media_obj_el.getElementsByClassName("NC-VideoMetaCount_mylist")[0].innerText = parseInt(m.counters.clip, 10).toLocaleString();
+        const media_obj_el = (document.get(".ExMedia" + m.obj_name) || [])[0];
+        if (media_obj_el) {
+            if (m.mode === "douga") {
+                if (m.status === "success") {
+                    media_obj_el.get(".NC-MediaObjectTitle")[0].innerHTML = m.title;
+                    const thumb = media_obj_el.get(".NC-Thumbnail-image")[0];
+                    thumb.style.backgroundImage = m.thumbnail && `url("${m.thumbnail}")`;
+                    media_obj_el.get(".NC-VideoLength")[0].innerText = m.length;
+                    media_obj_el.get(".NC-VideoMediaObject-description")[0].innerHTML = m.description;
+                    media_obj_el.get(".NC-VideoRegisteredAtText-text")[0].innerText = m.firetri.replace(/T/g, " ").replace(/-/g, "/").replace(/\+.+/g, "");
+                    media_obj_el.get(".NC-VideoMetaCount_view")[0].innerText = parseInt(m.counters.view, 10).toLocaleString();
+                    media_obj_el.get(".NC-VideoMetaCount_comment")[0].innerText = parseInt(m.counters.comment, 10).toLocaleString();
+                    media_obj_el.get(".NC-VideoMetaCount_mylist")[0].innerText = parseInt(m.counters.mylist, 10).toLocaleString();
+                }
+            } else if (m.mode === "seiga") {
+                if (m.status === "success") {
+                    media_obj_el.get(".NC-MediaObjectTitle")[0].innerText = m.title;
+                    const thumb = media_obj_el.get(".NC-Thumbnail-image")[0];
+                    thumb.style.backgroundImage = m.thumbnail && `url("${m.thumbnail}")`;
+                    media_obj_el.get(".NC-VideoMediaObject-description")[0].innerText = m.description;
+                    media_obj_el.get(".NC-VideoRegisteredAtText-text")[0].innerText = m.created.replace(/-/g, "/");
+                    media_obj_el.get(".NC-VideoMetaCount_view")[0].innerText = parseInt(m.counters.view, 10).toLocaleString();
+                    media_obj_el.get(".NC-VideoMetaCount_comment")[0].innerText = parseInt(m.counters.comment, 10).toLocaleString();
+                    media_obj_el.get(".NC-VideoMetaCount_mylist")[0].innerText = parseInt(m.counters.clip, 10).toLocaleString();
+                }
             }
         }
     } else if (m.type === "apndExls") {
         url_to_id_sv(m.conturl).id[0] ? apndExls(m.index, url_to_id_sv(m.conturl).id[0], url_to_id_sv(m.conturl).id[0]) : console.log("append exlist error on URL:" + m.conturl);
     }
+    sendRes();
+    return !0;
 });
 
 document.addEventListener('DOMContentLoaded', () => {
     if (document.URL.match(/^https?:\/\/www\.nicovideo\.jp\/my/)) {
-        const myid = document.getElementsByClassName("UserDetailsHeader-accountID")[0] ? document.getElementsByClassName("UserDetailsHeader-accountID")[0].childNodes[1].textContent : "";
+        const myid = document.get(".UserDetailsHeader-accountID")[0] ? document.get(".UserDetailsHeader-accountID")[0].childNodes[1].textContent : "";
         if (myid) chrome.storage.local.set({ myid: myid });
     } else {
         const commonheader_observer = new MutationObserver(() => {
             commonheader_observer.disconnect();
-            const myid = (img => img ? (i => i ? i.tagName == "IMG" ? i.src.split("/").pop().split(".jpg")[0] : "" : "")(img.pop()) : "")([...document.getElementById("CommonHeader").getElementsByTagName("img")]);
+            const myid = (img => img ? (i => i ? i.tagName == "IMG" ? i.src.split("/").pop().split(".jpg")[0] : "" : "")(img.pop()) : "")(document.get("#CommonHeader")[0].get("img"));
             if (myid !== "blank") chrome.storage.local.set({ myid: myid });
         });
-        document.getElementById("CommonHeader") ? commonheader_observer.observe(document.getElementById("CommonHeader"), { childList: true }) : commonheader_observer.disconnect();
+        document.get("#CommonHeader")[0] ? commonheader_observer.observe(document.get("#CommonHeader")[0], { childList: true }) : commonheader_observer.disconnect();
     }
     if (document.URL.match(/^https?:\/.+\.nicovideo\.jp\/.*/)) {
         /*
@@ -692,10 +725,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 tooltip.innerText = item.exlists[getKey(presskey, 1, 2, 3, 4, 5) - 1].name;
                                 tooltip.style.left = over_el.slice(-1)[0].getBoundingClientRect().left + over_el.slice(-1)[0].clientWidth / 2 + "px";
                                 tooltip.style.transform = "translateX(-50%)";
-                            })([...document.getElementsByClassName("NC-WatchLaterButton-tooltip"), ...document.getElementsByClassName("Tooltip")].pop());
+                            })([...document.get(".NC-WatchLaterButton-tooltip"), ...document.get(".Tooltip")].pop());
                         });
                     } else {
-                        const tooltip = [...document.getElementsByClassName("NC-WatchLaterButton-tooltip"), ...document.getElementsByClassName("Tooltip")].pop();
+                        const tooltip = [...document.get(".NC-WatchLaterButton-tooltip"), ...document.get(".Tooltip")].pop();
                         tooltip && (tooltip.innerText = "あとで見る");
                     }
                 }
@@ -703,7 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.addEventListener("keydown", downfunc);
             const upfunc = e => {
                 presskey[e.key] = false;
-                const tooltip = [...document.getElementsByClassName("NC-WatchLaterButton-tooltip"), ...document.getElementsByClassName("Tooltip")].pop();
+                const tooltip = [...document.get(".NC-WatchLaterButton-tooltip"), ...document.get(".Tooltip")].pop();
                 tooltip && (tooltip.innerText = "あとで見る");
             };
             document.addEventListener("keyup", upfunc);
@@ -714,8 +747,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (e.target.classList.contains("ExAddButton-button") && checkKeys(presskey, 1, 2, 3, 4, 5)) {
                     e.preventDefault();
                     const link_et_title = {
-                        link: e.target.classList.contains("WatchLaterButton-button") ? e.target.parentNode.parentNode.getElementsByTagName("a")[0].href : e.target.parentNode.parentNode.parentNode.parentNode.href,
-                        title: e.target.classList.contains("WatchLaterButton-button") ? e.target.parentNode.parentNode.getElementsByClassName("thumb")[0].alt : e.target.parentNode.parentNode.getElementsByClassName("NC-Thumbnail-image")[0].getAttribute("aria-label")
+                        link: e.target.classList.contains("WatchLaterButton-button") ? e.target.parentNode.parentNode.get("a")[0].href : e.target.parentNode.parentNode.parentNode.parentNode.href,
+                        title: e.target.classList.contains("WatchLaterButton-button") ? e.target.parentNode.parentNode.get(".thumb")[0].alt : e.target.parentNode.parentNode.get(".NC-Thumbnail-image")[0].getAttribute("aria-label")
                     };
                     console.log(getKey(presskey, 1, 2, 3, 4, 5) - 1, " / ", url_to_id_sv(link_et_title.link).id[0], " / ", link_et_title.title);
                 }
@@ -737,10 +770,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     exlists[list_keycode].list.push({ id: url_to_id_sv(document.URL).id[0], label: document.title.split(" - ").slice(0, -1).join(" - ") });
                     chrome.storage.local.set({ exlists: exlists });
                     if (url_to_id_sv(document.URL).sv === "douga") {
-                        const notice = new El("div", { class: "NoticeMessage GeneralNoticeContainer-message GeneralNoticeContainer-transition-enter-done" }, [
-                            new El("pre", [exlists[list_keycode].name + " に追加しました"])
+                        const notice = El("div", { class: "NoticeMessage GeneralNoticeContainer-message GeneralNoticeContainer-transition-enter-done" }, [
+                            El("pre", [exlists[list_keycode].name + " に追加しました"])
                         ]).gen();
-                        document.getElementsByClassName("GeneralNoticeContainer")[0].appendChild(notice);
+                        document.get(".GeneralNoticeContainer")[0].appendChild(notice);
                         setTimeout(() => notice.remove(), 2500);
                     } else {
                         timeouts.map(t => clearTimeout(t));
@@ -752,15 +785,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }, false);
     }
     if (document.URL.match(/^https?:\/\/www\.nicovideo\.jp\/watch\//)) {
-        if (document.getElementsByClassName("ErrorMessage")[0]) return;
+        if (document.get(".ErrorMessage")[0]) return;
         const tag_observer = new MutationObserver(() => {
             ext_tag_link();
             if (tag_link) gen_tag_link();
         });
-        const taglist = document.getElementsByClassName("TagList")[0];
+        const taglist = document.get(".TagList")[0];
         if (taglist) {
             tag_observer.observe(taglist, { childList: true });
-            tag_border = taglist.childElementCount && document.getElementsByClassName("TagItem")[0].style.border;
+            tag_border = taglist.childElementCount && document.get(".TagItem")[0].style.border;
             chrome.storage.local.get({
                 tag_link: true
             }, items => {
@@ -769,14 +802,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (tag_link) gen_tag_link();
             });
         }
-        document.getElementById("CommonHeader").addEventListener('click', e => {
+        document.get("#CommonHeader")[0].addEventListener('click', e => {
             if ((e.path || []).length <= 10 && (e.target.tagName || "").toLowerCase() !== "a")
                 chrome.storage.local.get({ header_scroll: 2 }, item =>
                     scroll_p(parseInt(item.header_scroll))
                 );
         });
         const panel_observer = new MutationObserver(() => {
-            if (document.getElementsByClassName("PlayerPanelContainer")[0]) {
+            if (document.get(".PlayerPanelContainer")[0]) {
                 panel_observer.disconnect();
             } else {
                 return;
@@ -787,79 +820,91 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-        const mcpp = document.getElementsByClassName("MainContainer-playerPanel")[0];
+        const mcpp = document.get(".MainContainer-playerPanel")[0];
         mcpp && panel_observer.observe(mcpp, { childList: true });
     } else if (document.URL.match(/https?:\/\/www\.nicovideo\.jp\/(my|user\/\d+)\/mylist\/(ex)?\d+/)) {
         const userpage_loaded = () => {
             if (document.URL.match(/https?:\/\/www\.nicovideo\.jp\/(my|user\/\d+)\/mylist\/ex\d+/)) {
                 console.log(`load ${listid} of Exlist`);
-                const exlist_container = new El("div", { class: "ExlistContainer" }, [
-                    new El("header", { class: "MylistHeader" }, [
-                        new El("section", { class: "MylistHeader-section" }, [
-                            new El("h1", { class: "MylistHeader-name" }, ["ex"]),
-                            new El("div", { class: "MylistHeader-meta" }, [
-                                new El("span", { class: "MylistHeader-metaItem" }, ["全", new El("span", { class: "MylistHeader-metaItemValue" }, ["0"]), "件"])
+                const exlist_container = El("div", { class: "ExlistContainer" }, [
+                    El("header", { class: "MylistHeader" }, [
+                        El("section", { class: "MylistHeader-section" }, [
+                            El("h1", { class: "MylistHeader-name" }, ["ex"]),
+                            El("div", { class: "MylistHeader-meta" }, [
+                                El("span", { class: "MylistHeader-metaItem" }, ["全", El("span", { class: "MylistHeader-metaItemValue" }, ["0"]), "件"])
                             ])
                         ]),
-                        new El("div", { class: "MylistHeaderAction MylistHeader-action" }, [
-                            new El("button").attr({ class: "ShareButton MylistShareButton MylistHeaderAction-item" }),
-                            new El("div").class("ThreePointMenu-button")
+                        El("div", { class: "MylistHeaderAction MylistHeader-action" }, [
+                            El("button").attr({ class: "ShareButton MylistShareButton MylistHeaderAction-item" }),
+                            El("div").class("ThreePointMenu-button")
                         ])
                     ]),
-                    new El("div", { class: "VideoListEditMenu MylistVideoListEditMenu MylistVideoListEditMenu_disable VideoListEditMenu_disable" }, [
-                        new El("div", { class: "Checkbox" }, [
-                            new El("input").attr({ class: "Checkbox-input", type: "checkbox", name: "VideoListEditMenu-isAllChecked", id: "VideoListEditMenu-isAllChecked" }),
-                            new El("label").attr({ class: "Checkbox-check", for: "VideoListEditMenu-isAllChecked" }),
-                            new El("label", { class: "Checkbox-label", for: "VideoListEditMenu-isAllChecked" }, ["すべて選択"])
+                    El("div", { class: "VideoListEditMenu MylistVideoListEditMenu MylistVideoListEditMenu_disable VideoListEditMenu_disable" }, [
+                        El("div", { class: "Checkbox" }, [
+                            El("input").attr({ class: "Checkbox-input", type: "checkbox", name: "VideoListEditMenu-isAllChecked", id: "VideoListEditMenu-isAllChecked" }),
+                            El("label").attr({ class: "Checkbox-check", for: "VideoListEditMenu-isAllChecked" }),
+                            El("label", { class: "Checkbox-label", for: "VideoListEditMenu-isAllChecked" }, ["すべて選択"])
                         ]),
-                        new El("div", [
-                            new El("button", { class: "VideoListEditMenuButton VideoListEditMenu-delete VideoListEditMenuButton_disable" }, ["削除"])
+                        El("div", [
+                            El("menu", { class: "MylistVideoListEditMenu-additional" }, [
+                                El("button", ["IDをコピーする"]).class("VideoListEditMenuButton MylistVideoListEditMenu-register VideoListEditMenuButton_disable")
+                            ]),
+                            El("span").class("VideoListEditMenu-divider"),
+                            El("button", { class: "VideoListEditMenuButton VideoListEditMenu-delete VideoListEditMenuButton_disable" }, ["削除"])
                         ])
                     ]),
-                    new El("div").class("TempVideoMediaObjectList")
+                    El("div").class("TempVideoMediaObjectList")
                 ]).gen();
-                const mylist_container = document.getElementsByClassName("MylistContainer")[0];
+                const mylist_container = document.get(".MylistContainer")[0];
                 El.appendChildren(mylist_container, exlist_container);
-                exlist_container.getElementsByClassName("MylistShareButton")[0].addEventListener("click", openShare, false);
-                exlist_container.getElementsByClassName("ThreePointMenu-button")[0].addEventListener("click", openHeaderMenu, false);
-                document.getElementsByClassName("SubMenuLinkList")[0].addEventListener("click", () => exlist_container.remove(), false);//元からあるマイリスト一覧のクリックを検知
-                const all_check = document.getElementById("VideoListEditMenu-isAllChecked");
+                exlist_container.get(".MylistShareButton")[0].addEventListener("click", openShare, false);
+                exlist_container.get(".ThreePointMenu-button")[0].addEventListener("click", openHeaderMenu, false);
+                document.get(".SubMenuLinkList")[0].addEventListener("click", () => exlist_container.remove(), false);//元からあるマイリスト一覧のクリックを検知
+                const all_check = document.get("#VideoListEditMenu-isAllChecked")[0];
                 all_check.onclick = () => {
-                    let { true: checked, false: unchecked } = [...exlist_container.getElementsByClassName("VideoMediaObjectList")[0].getElementsByClassName("Checkbox-input")].reduce((acc, e) => ({ [e.checked]: [...acc[e.checked], e.id], [!e.checked]: acc[!e.checked] }), { true: [], false: [] });
-                    if (document.getElementById("VideoListEditMenu-isAllChecked").checked) {
+                    let { true: checked, false: unchecked } = [...exlist_container.get(".VideoMediaObjectList")[0].get(".Checkbox-input")].reduce((acc, e) => ({ [e.checked]: [...acc[e.checked], e.id], [!e.checked]: acc[!e.checked] }), { true: [], false: [] });
+                    if (document.get("#VideoListEditMenu-isAllChecked")[0].checked) {
                         unchecked.map(id => document.getElementById(id).checked = true);
-                        exlist_container.getElementsByClassName("VideoListEditMenu")[0].getElementsByClassName("Checkbox-label")[0].innerText = (checked.length + unchecked.length) + "件選択中";
+                        exlist_container.get(".VideoListEditMenu")[0].get(".Checkbox-label")[0].innerText = (checked.length + unchecked.length) + "件選択中";
                     } else {
                         checked.map(id => document.getElementById(id).checked = false);
-                        exlist_container.getElementsByClassName("VideoListEditMenu")[0].getElementsByClassName("Checkbox-label")[0].innerText = "すべて選択";
+                        exlist_container.get(".VideoListEditMenu")[0].get(".Checkbox-label")[0].innerText = "すべて選択";
                     }
-                    checked = [...exlist_container.getElementsByClassName("VideoMediaObjectList")[0].getElementsByClassName("Checkbox-input")].reduce((acc, e) => ({ [e.checked]: [...acc[e.checked], e.id], [!e.checked]: acc[!e.checked] }), { true: [], false: [] }).true;
+                    checked = [...exlist_container.get(".VideoMediaObjectList")[0].get(".Checkbox-input")].reduce((acc, e) => ({ [e.checked]: [...acc[e.checked], e.id], [!e.checked]: acc[!e.checked] }), { true: [], false: [] }).true;
                     checkCheck(checked);
                 }
-                const delete_btn = exlist_container.getElementsByClassName("VideoListEditMenuButton")[0];
+                const delete_btn = exlist_container.get(".VideoListEditMenu-delete")[0];
                 delete_btn.onclick = () => {
-                    const checked = [...exlist_container.getElementsByClassName("VideoMediaObjectList")[0].getElementsByClassName("Checkbox-input")].reduce((acc, e) => ({ [e.checked]: [...acc[e.checked], e.id], [!e.checked]: acc[!e.checked] }), { true: [], false: [] }).true;
+                    const checked = [...exlist_container.get(".VideoMediaObjectList")[0].get(".Checkbox-input")].reduce((acc, e) => ({ [e.checked]: [...acc[e.checked], e.id], [!e.checked]: acc[!e.checked] }), { true: [], false: [] }).true;
                     if (checked.length && confirm(`${checked.length}件のコンテンツをリストから削除しますか？`)) {
                         ext_some(checked);
                         all_check.click();
                     }
                 };
+                const copy_btn = exlist_container.get(".MylistVideoListEditMenu-register")[0];
+                copy_btn.onclick = () => {
+                    const checked = [...exlist_container.get(".VideoMediaObjectList")[0].get(".Checkbox-input")].reduce((acc, e) => ({ [e.checked]: [...acc[e.checked], e.getAttribute("data-checkboxes-item-id")], [!e.checked]: acc[!e.checked] }), { true: [], false: [] }).true;
+                    if (checked.length) {
+                        navigator.clipboard.writeText([...new Set(checked)].join(" "));
+                        all_check.click();
+                    }
+                };
 
                 const container_loaded = () => {
-                    document.getElementsByClassName("ErrorState")[0].style.display = "none";
+                    document.get(".ErrorState")[0].style.display = "none";
                     gen_media_objs();
                 };
                 const mlcontainer_observer = new MutationObserver(() => {
                     mlcontainer_observer.disconnect();
                     container_loaded();
                 });
-                document.getElementsByClassName("ErrorState")[0] ? (mlcontainer_observer.disconnect(), container_loaded()) : mlcontainer_observer.observe(document.getElementsByClassName("MylistContainer")[0], { childList: true });
+                document.get(".ErrorState")[0] ? (mlcontainer_observer.disconnect(), container_loaded()) : mlcontainer_observer.observe(document.get(".MylistContainer")[0], { childList: true });
             } else {
                 const container_loaded = () => {
-                    if (document.getElementsByClassName("ErrorState-title").length) {
-                        if (document.getElementsByClassName("ErrorState-title")[0].innerText.match(/非公開/)) {
-                            const link_to_my = new El("a", [...document.getElementsByClassName("ErrorState")[0].children]).attr({ href: document.URL.replace(/user\/\d+/g, "my"), style: "display: block;" }).gen();
-                            document.getElementsByClassName("ErrorState")[0].appendChild(link_to_my);
+                    if (document.get(".ErrorState-title").length) {
+                        if (document.get(".ErrorState-title")[0].innerText.match(/非公開/)) {
+                            const link_to_my = El("a", [...document.get(".ErrorState")[0].children]).attr({ href: document.URL.replace(/user\/\d+/g, "my"), style: "display: block;" }).gen();
+                            document.get(".ErrorState")[0].appendChild(link_to_my);
                             link_to_my.style.backgroundColor = "#fff";
                             link_to_my.style.border = "5px solid #d3d3d3";
                         }
@@ -869,22 +914,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     mlcontainer_observer.disconnect();
                     container_loaded();
                 });
-                document.getElementsByClassName("ErrorState")[0] ? (mlcontainer_observer.disconnect(), container_loaded()) : mlcontainer_observer.observe(document.getElementsByClassName("MylistContainer")[0], { childList: true });
+                document.get(".ErrorState")[0] ? (mlcontainer_observer.disconnect(), container_loaded()) : mlcontainer_observer.observe(document.get(".MylistContainer")[0], { childList: true });
             }
         };
         const userpage_observer = new MutationObserver(() => { userpage_observer.disconnect(); userpage_loaded(); });
-        const userpagemain = document.getElementsByClassName("UserPage-main")[0];
+        const userpagemain = document.get(".UserPage-main")[0];
         userpagemain && userpage_observer.observe(userpagemain, { childList: true });
     } else if (document.URL.match(/^https?:\/\/seiga\.nicovideo\.jp\/seiga\/im\d+/)) {
-        if (document.getElementsByClassName("error-wrapper")[0]) {
+        if (document.get(".error-wrapper")[0]) {
             return;
         }
         const tag_observer = new MutationObserver(() => {
             ext_tag_link();
             if (tag_link) gen_tag_link();
         });
-        tag_observer.observe(document.getElementsByClassName("static")[0].getElementsByTagName("ul")[0], { childList: true });
-        tag_border = document.getElementsByClassName("tag")[0].style.border;
+        tag_observer.observe(document.get(".static")[0].get("ul")[0], { childList: true });
+        tag_border = document.get(".tag")[0].style.border;
         chrome.storage.local.get({
             tag_link: true
         }, items => {

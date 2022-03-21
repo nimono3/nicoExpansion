@@ -65,7 +65,7 @@ function seiga_request(seiga_id, obj_name, trial) {
             });
         });
 }
-chrome.runtime.onMessage.addListener(m => {
+chrome.runtime.onMessage.addListener((m, _, sendRes) => {
     if (m.type === "get") {
         m.mode === "douga" && douga_request(m.media_id, m.obj_name, m.trial);
         m.mode === "seiga" && seiga_request(m.media_id, m.obj_name, m.trial);
@@ -90,9 +90,11 @@ chrome.runtime.onMessage.addListener(m => {
     } else if (m.type === "renameMenu") {
         chrome.contextMenus.update(m.id, { title: m.title || "" });
     }
+    sendRes();
+    return !0;
 });
 chrome.runtime.onInstalled.addListener(() => {
-    chrome.contextMenus.create({ id: "apndExls", title: decodeURI("%E6%8B%A1%E5%BC%B5%E3%83%9E%E3%82%A4%E3%83%AA%E3%82%B9%E3%83%88"), contexts: ["link"] }, e => console.log(e));
+    chrome.contextMenus.create({ id: "apndExls", title: decodeURI("%E6%8B%A1%E5%BC%B5%E3%83%9E%E3%82%A4%E3%83%AA%E3%82%B9%E3%83%88"), contexts: ["link"] });
     chrome.contextMenus.create({ id: "apndExls-0", parentId: "apndExls", title: "list0", contexts: ["link"] });
     chrome.contextMenus.create({ id: "apndExls-1", parentId: "apndExls", title: "list1", contexts: ["link"] });
     chrome.contextMenus.create({ id: "apndExls-2", parentId: "apndExls", title: "list2", contexts: ["link"] });

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "nicoExpansion",
-  "version": "3.5.9",
+  "version": "3.5.10",
   "description": "ニコニコに関する機能",
   "icons": {
     "512": "icons/nicoExp512.png",
@@ -28,7 +28,8 @@
   "permissions": [
     "storage",
     "tabs",
-    "contextMenus"
+    "contextMenus",
+    "clipboardWrite"
   ],
   "host_permissions": [
     "*://ext.nicovideo.jp/api/getthumbinfo/*",

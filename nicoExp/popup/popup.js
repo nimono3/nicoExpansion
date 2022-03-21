@@ -2,6 +2,7 @@ const getEl = { id: id => document.getElementById(id) };
 const addEL = (el, type, func) => { el.addEventListener(type, func, false); };
 const addELs = array => array.map(arr => addEL(...arr));
 const header_scroll = getEl.id('click-scroll');
+const matchNc = url => url.match(/^https?:\/\/.+\.nicovideo\.jp\/.+/);
 const exdet_open = getEl.id("exdet-open");
 const ex_funcs = ["jpid", "link", "curl", "exls"].reduce((acc, ex_fn_id) => ({/*機能の一覧( 描画設定のチェックボックスと機能の要素のelementを管理する )*/
     ...acc,
@@ -65,18 +66,21 @@ addEL(document, 'DOMContentLoaded', _ => {
             tag_link.checked = items.tag_link;
             ichiba_tab.checked = items.ichiba_tab;
             chrome.tabs.query({ active: true, currentWindow: true }, e => {
-                chrome.tabs.sendMessage(e[0].id, { type: 'tag_link', tag_link: tag_link.checked });
-                chrome.tabs.sendMessage(e[0].id, { type: 'ichiba_tab', ichiba_tab: ichiba_tab.checked });
+                if (matchNc(e[0].url)) {
+                    chrome.tabs.sendMessage(e[0].id, { type: 'tag_link', tag_link: tag_link.checked });
+                    chrome.tabs.sendMessage(e[0].id, { type: 'ichiba_tab', ichiba_tab: ichiba_tab.checked });
+                }
                 const which = url_to_id_sv(e[0].url);
                 let myid = items.myid;
                 const amazon_pattern = /(?<=^https{0,1}:\/\/www\.amazon\.(co\.jp|com)\/[^?]+\/)([A-Z]|\d)+(?=.*$)/g;
                 let cont_title = e[0].title.match(/(クリップしたイラスト)|(さんのシリーズ)/) ? items.qtlist.name : e[0].title.split(" - ").slice(0, -1).join(" - ");
                 apnd_ipt.value = e[0].url.match(/^https?:\/\/.+\.nicovideo\.jp/) && which.sv !== "another" ? which.id[0] + (e[0].title.split(" - ").length > 1 ? "~" : "") + cont_title : "";
-                if (!apnd_ipt.value && e[0].url.match(amazon_pattern)) apnd_ipt.value = "az" + e[0].url.match(amazon_pattern) + "~" + e[0].title.split(" | ").slice(0, -4).join(" | ");
-                const quote_pattern = (which.sv === "mylist" || which.sv === "clip" || which.sv === "series" || which.sv === "user-v" || e[0].url.match(/^https?:\/\/seiga\.nicovideo\.jp\/my\/clip/)) && !e[0].url.match(/garage/);
-                getEl.id("exls-qt-btn").style.display = quote_pattern ? (chrome.tabs.sendMessage(e[0].id, { type: 'quote_list' }), "inline-block") : "none";
+                !apnd_ipt.value && (apnd_ipt.value = e[0].url.match(/^https?:\/\/.+\.nicovideo\.jp\/my/) && which.sv !== "mylist" && myid ? "user/" + myid : "");
+                if (!apnd_ipt.value && e[0].url.match(amazon_pattern)) apnd_ipt.value = "az" + e[0].url.match(amazon_pattern) + "~" + e[0].title.replace(/Amazon\.co(\.jp|m): /, "");
+                const quote_pattern = (["mylist", "clip", "series", "user-v"].includes(which.sv) || e[0].url.match(/^https?:\/\/seiga\.nicovideo\.jp\/my\/clip/)) && !e[0].url.match(/garage/);
+                getEl.id("exls-qt-btn").style.display = quote_pattern ? (matchNc(e[0].url) && chrome.tabs.sendMessage(e[0].id, { type: 'quote_list' }), "inline-block") : "none";
                 getEl.id("url-cp").value = (url =>
-                    url.match(/^https?:\/\/[^q]+\.nicovideo\.jp/) && which.sv !== "another" && which.sv !== "clip" ? "https://nico.ms/" + which.id[0] :
+                    url.match(/^https?:\/\/[^q]+\.nicovideo\.jp/) && !["another", "clip", "comic"].includes(which.sv) ? "https://nico.ms/" + which.id[0] :
                         [
                             ...[
                                 { reg: amazon_pattern, url: ["https://nico.ms/az", ""] },
@@ -96,11 +100,11 @@ addEL(document, 'DOMContentLoaded', _ => {
         [exdet_open, _ => (chrome.storage.local.set({ exdet: exdet_open.value < 0 ? exdet_open.value : getEl.id("exls-det").open - 0 }))],
         [tag_link, _ => {
             chrome.storage.local.set({ tag_link: tag_link.checked });
-            chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'tag_link', tag_link: tag_link.checked }));
+            chrome.tabs.query({ active: true, currentWindow: true }, tabs => matchNc(tabs[0].url) && chrome.tabs.sendMessage(tabs[0].id, { type: 'tag_link', tag_link: tag_link.checked }));
         }],
         [ichiba_tab, _ => {
             chrome.storage.local.set({ ichiba_tab: ichiba_tab.checked });
-            chrome.tabs.query({ active: true, currentWindow: true }, tabs => chrome.tabs.sendMessage(tabs[0].id, { type: 'ichiba_tab', ichiba_tab: ichiba_tab.checked }));
+            chrome.tabs.query({ active: true, currentWindow: true }, tabs => matchNc(tabs[0].url) && chrome.tabs.sendMessage(tabs[0].id, { type: 'ichiba_tab', ichiba_tab: ichiba_tab.checked }));
         }]
     ].map(arr => [arr[0], "change", arr[1]]));
     addEL(getEl.id("exls-det"), "click", _ => (exdet_open.value < 0 || chrome.storage.local.set({ exdet: !getEl.id("exls-det").open - 0 })));
