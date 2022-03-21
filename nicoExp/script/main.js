@@ -692,7 +692,7 @@ chrome.runtime.onMessage.addListener((m, _, sendRes) => {
             }
         }
     } else if (m.type === "apndExls") {
-        url_to_id_sv(m.conturl).id[0] ? apndExls(m.index, url_to_id_sv(m.conturl).id[0], url_to_id_sv(m.conturl).id[0]) : console.log("append exlist error on URL:" + m.conturl);
+        url_to_id_sv(m.conturl).id[0] ? apndExls(m.index, url_to_id_sv(m.conturl).id[0], m.contlabel || url_to_id_sv(m.conturl).id[0]) : console.log("append exlist error on URL:" + m.conturl);
     }
     sendRes();
     return !0;

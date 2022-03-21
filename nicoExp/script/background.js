@@ -110,7 +110,7 @@ chrome.contextMenus.onClicked.addListener((menu, tab) => {
     if (menu.menuItemId.match(/apndExls-\d+/)) {
         if (tab.url.match(/^https?:\/\/.*\.nicovideo\.jp\/.*/)) {
             console.log(menu);
-            chrome.tabs.sendMessage(tab.id, { type: "apndExls", index: menu.menuItemId.replace(/apndExls-/g, ""), conturl: menu.linkUrl, contlabel: "" });
+            chrome.tabs.sendMessage(tab.id, { type: "apndExls", index: menu.menuItemId.replace(/apndExls-/g, ""), conturl: menu.linkUrl, contlabel: menu.selectionText });
         }
     }
 });
