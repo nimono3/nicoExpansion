@@ -268,7 +268,7 @@ ncids.map(cate => (sheet => {
 addELs([/*EventListeners*/
     [getEl.id("myls-apnd-btn"), "click", _ => {
         if (split_chars.filter(f => ~apnd_ipt.value.indexOf(f)).length === 0) {
-            if (apnd_ipt.value) add_exls(...(v => [v[0], v.slice(1).join("~") ? v.slice(1).join("~") : v[0]])(apnd_ipt.value.split("~")));
+            if (apnd_ipt.value) add_exls(...(v => [url_to_id_sv(v[0]).id[0], v.slice(1).join("~") ? v.slice(1).join("~") : v[0]])(apnd_ipt.value.split("~")));
             apnd_ipt.value = "";
             reload_canvas();
         }

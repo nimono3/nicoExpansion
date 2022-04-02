@@ -57,16 +57,22 @@ const exls_default = {
 };
 
 function scroll_p(mode) {
-    if (mode >= 0) scrollTo(0, 0);
+    if (mode == 0) scrollTo(0, 0);
+    const common_header = document.get("#CommonHeader")[0] || { clientHeight: 36, style: { position: "sticky" } };//取得失敗用
     if (range_func(1, 1 + 4).includes(mode)) {
-        const common_header = document.get("#CommonHeader")[0] || { clientHeight: 36, style: { position: "sticky" } };//取得失敗用
-        const correction = common_header.clientHeight * (common_header.style.position === "sticky");
-        scrollTo(0, document.get(([
+        const correction = common_header.get("svg")[0].parentNode.clientHeight * (common_header.style.position === "sticky") - 1;
+        scrollBy(0, document.get(([
             '.HeaderContainer-row',
             '.TagContainer',
             '.MainContainer',
             '.BottomContainer'
         ])[mode - 1])[0].previousElementSibling.getBoundingClientRect().bottom - correction);
+    }
+    if (range_func(0, 1).includes(mode - 100)) {
+        const correction = document.documentElement.clientHeight + 1;
+        scrollBy(0, document.get(([
+            ".MainContainer"
+        ])[mode - 100])[0].nextElementSibling.getBoundingClientRect().top - correction);
     }
     return;
 }
@@ -194,9 +200,9 @@ function openShare() {
                 El("div", { class: "NC-ShareModal-modal" }, [
                     El("div", { class: "NC-ShareModal-modalTitle" }, ["拡張マイリストの共有/読込"]),
                     El("div", { class: "NC-ShareModal-modalBody" }, [
-                        El("div", { class: "NC-ShareModal-sns" }, [
+                        El("div", { display: "none" }, { class: "NC-ShareModal-sns" }, [
                             El("button", { "aria-label": "twitter", class: "react-share__ShareButton NC-TwitterShareButton", style: "background-color: transparent; border: none; padding: 0px; font: inherit; color: inherit; cursor: pointer;" }, [
-                                /*El("div").class("NC-TwitterShareButton-icon")*/
+                                El("div").class("NC-TwitterShareButton-icon")
                             ])
                         ]),
                         El("div", { textAlign: "right" }, { class: "NC-ShareModal-form" }, [
@@ -234,7 +240,19 @@ function openShare() {
         }
     };
     document.get(".NC-ShareModal-modalClose")[0].addEventListener("click", shareClose, false);
-    document.get(".NC-Modal-overlay")[0].addEventListener("click", shareClose, false);
+    const modal_overlay = document.get(".NC-Modal-overlay")[0]
+    const upFOverlay = e => {
+        modal_overlay.removeEventListener("mouseup", upFOverlay, false);
+        modal_overlay.addEventListener("mousedown", downFOverlay, false);
+        shareClose(e);
+    };
+    const downFOverlay = e => {
+        if (e.target.classList.contains("NC-Modal-overlay")) {
+            modal_overlay.removeEventListener("mousedown", downFOverlay, false);
+            modal_overlay.addEventListener("mouseup", upFOverlay, false);
+        }
+    };
+    modal_overlay.addEventListener("mousedown", downFOverlay, false);
     return;
 }
 function openHeaderMenu() {
@@ -278,7 +296,21 @@ function openEditMylist() {
     const editClose = e => e.target.classList.contains("ModalContent-headerCloseButton") && (edit_modal.remove(), document.body.style = "");
     const editCloseBtn = document.get(".ModalContent-headerCloseButton")[0];
     editCloseBtn.addEventListener("click", editClose, false);
-    document.get(".Modal-overlay")[0].addEventListener("click", e => e.target.classList.contains("Modal-overlay") && editCloseBtn.click(), false);
+    const modal_overlay = document.get(".Modal-overlay")[0]
+    const upFOverlay = e => {
+        modal_overlay.removeEventListener("mouseup", upFOverlay, false);
+        modal_overlay.addEventListener("mousedown", downFOverlay, false);
+        if (e.target.classList.contains("Modal-overlay")) {
+            editCloseBtn.click();
+        }
+    };
+    const downFOverlay = e => {
+        if (e.target.classList.contains("Modal-overlay")) {
+            modal_overlay.removeEventListener("mousedown", downFOverlay, false);
+            modal_overlay.addEventListener("mouseup", upFOverlay, false);
+        }
+    };
+    modal_overlay.addEventListener("mousedown", downFOverlay, false);
     document.get(".ModalContent-footerSubmitButton")[0].addEventListener("click", () => {
         chrome.storage.local.get(exls_default, item => {
             const exls = item.exlists;
@@ -301,7 +333,7 @@ const openMediaMenu = (name, id = "") => {
     const media_menu = El("div", { class: "WheelStopper", style: "" }, [
         El("div", { class: "Snap ThreePointMenu VideoMenu MylistPageVideoMenu MylistItem-action", style: `top: ${window.pageYOffset + media_obj_el.get(".ThreePointMenu-button")[0].getBoundingClientRect().bottom}px; left: 1255.5px; transform: translateX(-100%);` }, [
             El("button", ["リストから削除"]).class("VideoMenuButtonItem MylistPageVideoMenu-item MenuItem-Remove"),
-            ...(url_to_id_sv(id).others.ad ? [El("a", ["ニコニ広告する"]).attr({ class: "VideoMenuLinkItem MenuItem-Nicoad", onclick: `window.open("https://nicoad.nicovideo.jp/${url_to_id_sv(id).others.ad}/publish/${url_to_id_sv(id).id}", null, "top=0,left=0,width=428,height=600")` })] : [])
+            ...(url_to_id_sv(id).others.ad ? [El("a", ["ニコニ広告する"]).attr({ class: "VideoMenuLinkItem MenuItem-Nicoad", onclick: `window.open("https://nicoad.nicovideo.jp/${url_to_id_sv(id).others.ad}/publish/${url_to_id_sv(id).id[0].split(/\//g).pop()}", null, "top=0,left=0,width=428,height=600")` })] : [])
         ])
     ]).gen();
     document.body.insertAdjacentElement("beforeend", media_menu);
@@ -356,6 +388,7 @@ const gen_media_temp = (name, id, label) => El("div", { class: "CheckboxVideoMed
                 El("div", { class: "NC-MediaObject-media" }, [
                     El("div", { class: "NC-VideoMediaObject-thumbnail" }, [
                         El("div", { class: "NC-Thumbnail NC-VideoThumbnail NC-VideoMediaObject-thumbnail NC-Thumbnail_sizeCover" }, [
+                            El("div").attr({ class: "NC-Thumbnail-backImage", role: "img", "aria-label": "", style: "position: absolute; top: 0; right: 0; bottom: 0; left: 0;" }),
                             El("div").attr({ class: "NC-Thumbnail-image", role: "img", "aria-label": "" }),/*サムネイル*/
                             ...(url_to_id_sv(id).sv === "douga" ? [El("div").class("NC-VideoLength")] : [])
                         ])
@@ -414,14 +447,24 @@ const gen_media_objs = () => {
             exlist.list.map((ex, i) => {
                 const media_name = i + ex.id.replace(/[^0-9A-Za-z_\-]+/g, "");
                 const media_template = gen_media_temp(media_name, ex.id, ex.label);
+                const service = url_to_id_sv(ex.id).sv;
+                const thumbnail_div = media_template.get(".NC-Thumbnail-image")[0];
                 media_obj_list_el.appendChild(media_template);
-                media_template.get(".NC-Thumbnail-image")[0].style.background = `center center / ${["seiga", "ichiba", "user", "commons"].includes(url_to_id_sv(ex.id).sv) ? "contain" : "cover"} no-repeat #fff`;
-                if (["douga", "seiga"].includes(url_to_id_sv(ex.id).sv)) {
-                    chrome.runtime.sendMessage({ type: "get", mode: url_to_id_sv(ex.id).sv, media_id: ex.id, obj_name: media_name, trial: 0 });
+                thumbnail_div.style.background = `center center / ${["seiga", "ichiba", "user", "commons"].includes(service) ? "contain" : "cover"} no-repeat #fff`;
+                if (["douga", "seiga"].includes(service)) {
+                    chrome.runtime.sendMessage({ type: "get", mode: service, media_id: ex.id, obj_name: media_name, trial: 0 });
                 } else {
-                    media_template.get(".NC-Thumbnail-image")[0].style.backgroundImage = id_to_img(ex.id) && `${[id_to_img(url_to_id_sv(ex.id).id[0])].flat().map(i => `url("${i}")`).join(',')}`;
+                    thumbnail_div.style.backgroundImage = id_to_img(ex.id) && `${[id_to_img(url_to_id_sv(ex.id).id[0])].flat().map(i => `url("${i}")`).join(',')}`;
                 }
-                if (url_to_id_sv(ex.id).sv === "commons") {
+                if (["commons"].includes(service)) {
+                    const backimage = media_template.get(".NC-Thumbnail-backImage")[0];
+                    backimage.style.background = thumbnail_div.style.background;
+                    thumbnail_div.style.backgroundColor = "#fff0";
+                    backimage.style.backgroundImage = thumbnail_div.style.backgroundImage;
+                    backimage.style.backgroundSize = "cover";
+                    backimage.style.filter = "blur(6px)";
+                }
+                if (service === "commons") {
                     const audio_el = El("audio").attr({ src: "https://commons.nicovideo.jp/api/preview/get?cid=" + ex.id.slice(2), controls: true, preload: "audio", style: "position: absolute; bottom: 0; width: 300px; height: 40px;" }).gen();
                     audio_el.onerror = function () { this.controls = false; };
                     (el => el && (el.parentNode.appendChild(audio_el), el.remove()))(media_template.get(".NC-MediaObject-bodySecondary")[0]);
@@ -692,7 +735,7 @@ chrome.runtime.onMessage.addListener((m, _, sendRes) => {
             }
         }
     } else if (m.type === "apndExls") {
-        url_to_id_sv(m.conturl).id[0] ? apndExls(m.index, url_to_id_sv(m.conturl).id[0], m.contlabel || url_to_id_sv(m.conturl).id[0]) : console.log("append exlist error on URL:" + m.conturl);
+        url_to_id_sv(m.conturl).id[0] ? apndExls(m.index, url_to_id_sv(m.conturl).id[0], m.contlabel || prompt("ラベル/メモを入力(任意)\nTips:文字列を選択して操作を行うと、この行程を短縮できます") || url_to_id_sv(m.conturl).id[0]) : console.log("append exlist error on URL:" + m.conturl);
     }
     sendRes();
     return !0;
@@ -802,12 +845,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (tag_link) gen_tag_link();
             });
         }
-        document.get("#CommonHeader")[0].addEventListener('click', e => {
-            if ((e.path || []).length <= 10 && (e.target.tagName || "").toLowerCase() !== "a")
+        const header_click = e => {
+            if (((e.path || []).length <= 10 || (e.type === "contextmenu" && e.target.tagName === "IMG")) && (e.target.tagName !== "A" || !e.target.closest("a") || e.type === "contextmenu"))
                 chrome.storage.local.get({ header_scroll: 2 }, item =>
                     scroll_p(parseInt(item.header_scroll))
                 );
+            e.type === "contextmenu" && ((!e.target.closest("a") && e.target.tagName !== "A") || (e.target.href || (e.target.closest("a") && e.target.closest("a").href) || "").match(/premiumday/)) && e.preventDefault();
+        };
+        document.get("#CommonHeader")[0].addEventListener('click', header_click, false);
+        document.get("#CommonHeader")[0].addEventListener('contextmenu', header_click, false);
+        const bottom_renderer = document.get(".BottomMainContainer .InViewRenderer")[0];
+        const renderer_style = bottom_renderer.style;
+        if (bottom_renderer && bottom_renderer.get(".BottomContainer-indicator")[0]) {
+            bottom_renderer.style.position = "fixed";
+            bottom_renderer.style.opacity = "0";
+            bottom_renderer.style.top = "0";
+            const renderer_observer = new MutationObserver(() => {
+                renderer_observer.disconnect();
+                bottom_renderer.style = renderer_style;
+            });
+            renderer_observer.observe(bottom_renderer, { childList: true });
+        }
+        /*const player_container = document.get(".PlayerContainer .VideoContainer")[0];//動画反転時にコメントも反転するようにしたけど
+        const p_container_observer = new MutationObserver(o => {
+            if (player_container.get(".CommentRenderer").length) {
+                p_container_observer.disconnect();
+                const video_player = document.get(".MainVideoPlayer")[0];
+                const com_canvas = document.get(".CommentRenderer canvas")[0];
+                if (video_player && com_canvas) {
+                    com_canvas.style.transform = video_player.classList.contains("is-flipped") ? "scaleX(-1)" : "";
+                    com_canvas.style.transition = "transform 1s ease";
+                    const player_observer = new MutationObserver(() => {
+                        com_canvas.style.transform = video_player.classList.contains("is-flipped") ? "scaleX(-1)" : "";
+                    });
+                    player_observer.observe(video_player, { attributes: true });
+                }
+            };
         });
+        player_container && p_container_observer.observe(player_container, { childList: true });*/
         const panel_observer = new MutationObserver(() => {
             if (document.get(".PlayerPanelContainer")[0]) {
                 panel_observer.disconnect();

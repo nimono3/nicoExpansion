@@ -52,11 +52,10 @@ a {
 
 select, .n-links {
     transition-duration: 0.1s;
-    padding: 6px;
+    padding: 4px;
     border: 1px solid #7c7c7c;
     border-radius: 4px;
-    font-size: 12px;
-    line-height: 38px;
+    line-height: 30px;
     font-family: 'Yu Gothic UI';
     color: #fafafa;
     background-color: #252525;
@@ -93,6 +92,14 @@ select {
     flex: 1;
     font-size: 14px;
     border: none;
+}
+
+optgroup {
+    color: #808080;
+}
+
+optgroup option {
+    color: #fafafa;
 }
 
 input[type=checkbox] {

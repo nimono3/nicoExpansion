@@ -47,11 +47,16 @@
             <span style="display: flex;" id="scroll-span">
                 スクロール<select id="click-scroll" class="inbtn-sel">
                     <option value="-1" label="スクロール無し"></option>
-                    <option value="0" label="トップ"></option>
-                    <option value="1" label="投稿日時,再生数"></option>
-                    <option value="2" label="動画タグ" selected></option>
-                    <option value="3" label="動画プレイヤー"></option>
-                    <option value="4" label="プレイヤー下"></option>
+                    <optgroup label="上端に揃えて">
+                        <option value="0" label="トップ"></option>
+                        <option value="1" label="投稿日時,再生数"></option>
+                        <option value="2" label="動画タグ" selected></option>
+                        <option value="3" label="動画プレイヤー"></option>
+                        <option value="4" label="ニコニ広告・ツリー・市場"></option>
+                    </optgroup>
+                    <optgroup label="下端に揃えて">
+                        <option value="100" label="プレイヤー下"></option>
+                    </optgroup>
                 </select>
             </span>
         </label>

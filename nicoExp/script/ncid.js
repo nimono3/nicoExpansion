@@ -7,33 +7,33 @@ const nc_imgs = {
     other: _ => ""
 };
 const ncids = [/*対応作品オブジェクトリスト{reg: id一致, url: [id埋め込み], name: class名などをこれで付ける, color: exls表示時に使用, text: サービス名2~4字 exls用}*/
-    [/(sm|nm|so)\d+/g, ["https://www.nicovideo.jp/watch/", "?ref=nicoExp"], "douga", "#8D8D8D", "動画", "video"],
-    [/(im)\d+/g, ["https://seiga.nicovideo.jp/seiga/", "?track=nicoExp&ref=nicoExp"], "seiga", "#E3AA3F", "静画", "seiga"],
-    [/(mg)\d+/g, ["https://seiga.nicovideo.jp/watch/", "?ref=nicoExp"], "manga", "#88C148", "漫画", null],
-    [/comic\/\d+/g, ["https://seiga.nicovideo.jp/", "?track=nicoExp"], "comic", "#446124", "漫画", null],
-    [/(sg|bk)\d+/g, ["https://seiga.nicovideo.jp/watch/", "?ref=nicoExp"], "other", "#000", "その他", null],//お題|書籍
-    [/(lv)\d+/g, ["https://live.nicovideo.jp/watch/", "?ref=nicoExp"], "live", "#0af", "生放送", "live"],
-    [/(co)\d+/g, ["https://com.nicovideo.jp/community/", ""], "community", "#258D8D", "コミュ", null],
-    [/(ch)\d+/g, ["https://ch.nicovideo.jp/channel/", ""], "channel", "#0af", "チャン", null],
-    [/(ar)\d+/g, ["https://ch.nicovideo.jp/article/", ""], "channel", "#0af", "チャン", null],
-    [/(nd)\d+/g, ["https://chokuhan.nicovideo.jp/products/detail/", ""], "other", "#000", "その他", null],//直販
-    [/((az([0-9]|[A-Z])+)|((ys|ggbo).+)|((dw|it)\d+))/g, ["https://ichiba.nicovideo.jp/item/", ""], "ichiba", "#FF9900", "市場", null],
-    [/(ap)\d+/g, ["https://app.nicovideo.jp/app/", "?track=nicoExp"], "app", "#0a0", "アプリ", null],
-    [/(jk)\d+/g, ["https://jk.nicovideo.jp/watch/", ""], "jikkyou", "#d00", "実況", null],
-    [/(nc)\d+/g, ["https://commons.nicovideo.jp/material/", "?transit_from=nicoExp"], "commons", "#B091C5", "コモンズ", null],
-    [/(nw)\d+/g, ["https://news.nicovideo.jp/watch/", "?news_ref=nicoExp"], "news", "#ff8000", "ニュース", null],
-    [/(?<=dic\/)\d+/g, ["https://dic.nicovideo.jp/id/", ""], "dic", "#d00", "百科", "nicodic"],/*大百科メモ:単語[a],動画[v],生放送[l],コミュニティ[c],ユーザー[u](t/はスマホ記事)*/
-    [/mylist\/\d+/g, ["https://www.nicovideo.jp/", ""], "mylist", "#d0f", "マイリス", null],
-    [/user\/\d+(?=\/video)/g, ["https://www.nicovideo.jp/", ""], "user-v", "#00f", "ユーザー", null],/*video pageを分けて取得*/
-    [/user\/\d+/g, ["https://www.nicovideo.jp/", ""], "user", "#00f", "ユーザー", null],
-    [/(gm)\d+/g, ["https://game.nicovideo.jp/atsumaru/games/", "?link_in=nicoExp"], "game", "#0a0", "ゲーム", "atsumaru"],
-    [/(td)\d+/g, ["https://3d.nicovideo.jp/works/", ""], "thrdim", "#EC3272", "立体", "solid"],
-    [/(nq)\d+/g, ["https://q.nicovideo.jp/watch/", ""], "quiz", "#da0", "クイズ", null],
-    [/clip\/\d+/g, ["https://seiga.nicovideo.jp/", ""], "clip", "#0df", "クリップ", null],
-    [/series\/\d+/g, ["https://www.nicovideo.jp/", ""], "series", "#3fc2b7", "シリーズ", null],
+    [/(sm|nm|so)[1-9]\d*/g, ["https://www.nicovideo.jp/watch/", "?ref=nicoExp"], "douga", "#8D8D8D", "動画", "video"],
+    [/(im)[1-9]\d*/g, ["https://seiga.nicovideo.jp/seiga/", "?track=nicoExp&ref=nicoExp"], "seiga", "#E3AA3F", "静画", "seiga"],
+    [/(mg)[1-9]\d*/g, ["https://seiga.nicovideo.jp/watch/", "?ref=nicoExp"], "manga", "#88C148", "漫画", null],
+    [/comic\/[1-9]\d*/g, ["https://seiga.nicovideo.jp/", "?track=nicoExp"], "comic", "#446124", "漫画", null],
+    [/(sg|bk)[1-9]\d*/g, ["https://seiga.nicovideo.jp/watch/", "?ref=nicoExp"], "other", "#000", "その他", null],//お題|書籍
+    [/(lv)[1-9]\d*/g, ["https://live.nicovideo.jp/watch/", "?ref=nicoExp"], "live", "#0af", "生放送", "live"],
+    [/(co)[1-9]\d*/g, ["https://com.nicovideo.jp/community/", ""], "community", "#258D8D", "コミュ", null],
+    [/(ch)[1-9]\d*/g, ["https://ch.nicovideo.jp/channel/", ""], "channel", "#0af", "チャン", null],
+    [/(ar)[1-9]\d*/g, ["https://ch.nicovideo.jp/article/", ""], "channel", "#0af", "チャン", null],
+    [/(nd)[1-9]\d*/g, ["https://chokuhan.nicovideo.jp/products/detail/", ""], "other", "#000", "その他", null],//直販
+    [/((az([0-9]|[A-Z])+)|((ys|ggbo)[0-9A-Za-z]+)|((dw|it)[1-9]\d*))/g, ["https://ichiba.nicovideo.jp/item/", ""], "ichiba", "#FF9900", "市場", null],
+    [/(ap)[1-9]\d*/g, ["https://app.nicovideo.jp/app/", "?track=nicoExp"], "app", "#0a0", "アプリ", null],
+    [/(jk)[1-9]\d*/g, ["https://jk.nicovideo.jp/watch/", ""], "jikkyou", "#d00", "実況", null],
+    [/(nc)[1-9]\d*/g, ["https://commons.nicovideo.jp/material/", "?transit_from=nicoExp"], "commons", "#B091C5", "コモンズ", null],
+    [/(nw)[1-9]\d*/g, ["https://news.nicovideo.jp/watch/", "?news_ref=nicoExp"], "news", "#ff8000", "ニュース", null],
+    [/dic\/[1-9]\d*/g, ["https://dic.nicovideo.jp/id/", ""], "dic", "#d00", "百科", "nicodic"],/*大百科メモ:単語[a],動画[v],生放送[l],コミュニティ[c],ユーザー[u](t/はスマホ記事)*/
+    [/mylist\/[1-9]\d*/g, ["https://www.nicovideo.jp/", ""], "mylist", "#d0f", "マイリス", null],
+    [/user\/[1-9]\d*(?=\/video)/g, ["https://www.nicovideo.jp/", ""], "user-v", "#00f", "ユーザー", null],/*video pageを分けて取得*/
+    [/user\/[1-9]\d*/g, ["https://www.nicovideo.jp/", ""], "user", "#00f", "ユーザー", null],
+    [/(gm)[1-9]\d*/g, ["https://game.nicovideo.jp/atsumaru/games/", "?link_in=nicoExp"], "game", "#0a0", "ゲーム", "atsumaru"],
+    [/(td)[1-9]\d*/g, ["https://3d.nicovideo.jp/works/", ""], "thrdim", "#EC3272", "立体", "solid"],
+    [/(nq)[1-9]\d*/g, ["https://q.nicovideo.jp/watch/", ""], "quiz", "#da0", "クイズ", null],
+    [/clip\/[1-9]\d*/g, ["https://seiga.nicovideo.jp/", ""], "clip", "#0df", "クリップ", null],
+    [/series\/[1-9]\d*/g, ["https://www.nicovideo.jp/", ""], "series", "#3fc2b7", "シリーズ", null],
     [/^.+$/g, ["https://dic.nicovideo.jp/a/", ""], "dic-a", "#d00", "百科", null]
 ].map(arr => { const nc = {};[nc.reg, nc.url, nc.name, nc.color, nc.text, nc.ad] = arr; return nc });
 const id_jump = id => (url => ~url ? window.open(url) : -1)(id_to_url(id));
-const id_to_url = id => (ret => !!ret ? ret[1].join(ret[0][0]) : -1)(ncids.map(i => [id.match(i.reg), i.url]).filter(_ => _[0])[0]);
+const id_to_url = id => (ret => !!ret ? ret[1].join(ret[0][0].slice(4 * (url_to_id_sv(id).sv === "dic"))) : -1)(ncids.map(i => [id.match(i.reg), i.url]).filter(_ => _[0])[0]);
 const url_to_id_sv = url => ncids.map(i => i.name != "dic-a" ? { id: url.match(i.reg), sv: i.name, others: i } : { id: [], sv: "another", others: i }).filter(_ => _.id)[0];
 const id_to_img = id => (nc_imgs[url_to_id_sv(id).sv] || nc_imgs.other)(id);
